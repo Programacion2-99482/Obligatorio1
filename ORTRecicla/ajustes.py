@@ -35,8 +35,14 @@ RECT_ACCION = (380, 624, 340, 58)
 
 NIVELES = {
     1: {"cantidad": 20, "intervalo": 1450, "velocidad": 58},
-    2: {"cantidad": 25, "intervalo": 1120, "velocidad": 88},
-    3: {"cantidad": 30, "intervalo": 850, "velocidad": 118},
+    2: {"cantidad": 20, "intervalo": 1450, "velocidad": 88},
+    3: {"cantidad": 25, "intervalo": 1120, "velocidad": 88},
+    4: {"cantidad": 25, "intervalo": 1120, "velocidad": 118},
+    5: {"cantidad": 30, "intervalo": 850, "velocidad": 118},
+    6: {"cantidad": 30, "intervalo": 850, "velocidad": 148},
+    7: {"cantidad": 35, "intervalo": 720, "velocidad": 148},
+    8: {"cantidad": 40, "intervalo": 640, "velocidad": 148},
+    9: {"cantidad": 40, "intervalo": 640, "velocidad": 168},
 }
 
 CONTENEDORES_CONFIG = (
@@ -44,7 +50,7 @@ CONTENEDORES_CONFIG = (
      "color": NEGRO, "rect": (40, 552, 245, 145)},
     {"tipo": "plastico", "lineas": ("PLÁSTICO",),
      "color": AMARILLO, "rect": (305, 552, 245, 145)},
-    {"tipo": "electronico", "lineas": ("ELECTRÓNICOS", "RAEE"),
+    {"tipo": "electronico", "lineas": ("ELECTRÓNICOS", "(RAEE)"),
      "color": VIOLETA, "rect": (570, 552, 245, 145)},
     {"tipo": "papel", "lineas": ("PAPEL Y CARTÓN",),
      "color": AZUL, "rect": (835, 552, 245, 145)},

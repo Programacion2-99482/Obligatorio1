@@ -129,7 +129,7 @@ def pagina_flujo(pdf):
     """Dibuja los estados y decisiones principales de la partida."""
     titulo_pagina(pdf, 2, "Diagrama de flujo del jugador")
     caja(pdf, 205, 720, 185, 38, "INICIO", VERDE)
-    caja(pdf, 205, 644, 185, 48, "Preparar nivel<br/>20 / 25 / 30 objetos · 45 s", TINTA)
+    caja(pdf, 205, 644, 185, 48, "Preparar nivel<br/>20–40 objetos · 45 s", TINTA)
     caja(pdf, 205, 564, 185, 48, "Seleccionar y arrastrar<br/>un residuo", AZUL)
     caja(pdf, 205, 475, 185, 52, "¿Lo soltó en la categoría correcta?", AMARILLO, TINTA)
     flecha(pdf, 297, 720, 297, 692)
@@ -147,7 +147,7 @@ def pagina_flujo(pdf):
     caja(pdf, 205, 382, 185, 48, "¿Quedan objetos\npor clasificar?", TINTA)
     flecha(pdf, 297, 475, 297, 430, "SÍ")
     flecha(pdf, 297, 430, 297, 612, "SÍ: continuar")
-    caja(pdf, 205, 284, 185, 48, "¿Era el nivel 3?", TINTA)
+    caja(pdf, 205, 284, 185, 48, "¿Era el nivel 9?", TINTA)
     flecha(pdf, 297, 382, 297, 332, "NO")
     caja(pdf, 70, 194, 165, 48, "Iniciar siguiente nivel", AZUL)
     caja(pdf, 260, 194, 145, 48, "VICTORIA", VERDE)
@@ -171,7 +171,8 @@ def pagina_proceso(pdf):
         ("1. De una acción a una partida", "La mecánica pasó de arrastrar una pieza "
          "a clasificar un flujo completo de residuos. La secuencia es aleatoria, "
          "pero garantiza las cuatro categorías en cada nivel. La dificultad crece "
-         "con 20, 25 y 30 objetos, intervalos menores y una banda más rápida."),
+         "en nueve niveles: 20, 20, 25, 25, 30, 30, 35, 40 y 40 objetos, a 58, "
+         "88, 88, 118, 118, 148, 148, 148 y 168 px/s."),
         ("2. Forma visual", "El primer prototipo presentaba cada residuo dentro de "
          "una tarjeta. Se descartó ese marco a pedido de la persona autora y se "
          "dibujaron siluetas independientes (botella, vaso, hoja, cuaderno, teclado, "
@@ -291,7 +292,7 @@ def pagina_afiche(pdf):
 
     pdf.setFillColor(colors.HexColor("#BFE2D0"))
     pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawCentredString(ancho / 2, 72, "3 NIVELES  ·  45 SEGUNDOS  ·  ARRASTRA Y RECICLA")
+    pdf.drawCentredString(ancho / 2, 72, "9 NIVELES  ·  45 SEGUNDOS  ·  ARRASTRA Y RECICLA")
     pdf.setFillColor(colors.HexColor("#D5DEDA"))
     pdf.setFont("Helvetica", 8)
     pdf.drawCentredString(ancho / 2, 50, "Inspirado en el programa ORT Recicla")

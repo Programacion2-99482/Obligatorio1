@@ -269,7 +269,7 @@ def dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje):
     texto(pantalla, f"{reciclados} / {cantidad} objetos", FUENTE_GRANDE, TINTA,
           (580, 126))
 
-    texto(pantalla, f"NIVEL {nivel} DE 3", FUENTE_CHICA, TINTA_SUAVE, (842, 109))
+    texto(pantalla, f"NIVEL {nivel} DE {len(NIVELES)}", FUENTE_CHICA, TINTA_SUAVE, (842, 109))
     texto(pantalla, f"PUNTOS  {puntaje:04d}", FUENTE_GRANDE, TINTA, (842, 126))
 
     texto(pantalla, f"NIVEL {nivel}", FUENTE_MEDIA, TINTA, (46, 199))
@@ -304,9 +304,27 @@ def dibujar_cinta(tiempo_transcurrido, velocidad):
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.bottom - 8), 3)
 
 
-def dibujar_contenedor(contenedor):
+def dibujar_simbolo_reciclaje(centro, radio=17):
+    """Dibuja tres flechas de reciclaje sobre una base clara."""
+    pygame.draw.circle(pantalla, PANEL, centro, radio)
+    factor = radio / 17
+    flecha = [(-11, -3), (2, -3), (2, -7), (12, 0), (2, 7), (2, 3), (-11, 3)]
+    for angulo in (0, 120, 240):
+        radianes = math.radians(angulo)
+        puntos = []
+        for x, y in flecha:
+            x *= factor
+            y *= factor
+            puntos.append((
+                round(centro[0] + x * math.cos(radianes) - y * math.sin(radianes)),
+                round(centro[1] + x * math.sin(radianes) + y * math.cos(radianes)),
+            ))
+        pygame.draw.polygon(pantalla, VERDE, puntos)
+
+
+def dibujar_contenedor(contenedor, rect=None):
     """Dibuja una papelera con el color y rótulo de su categoría."""
-    rect = contenedor["rect"]
+    rect = contenedor["rect"] if rect is None else rect
     color = contenedor["color"]
     pygame.draw.rect(pantalla, (190, 196, 192), rect.move(0, 5), border_radius=12)
     pygame.draw.rect(pantalla, color, rect, border_radius=12)
@@ -318,6 +336,8 @@ def dibujar_contenedor(contenedor):
     for indice, linea in enumerate(contenedor["lineas"]):
         texto(pantalla, linea, FUENTE_MEDIA, BLANCO,
               (rect.centerx, rect.y + 59 + indice * 19), centro=True)
+    if contenedor["tipo"] != "mezclado":
+        dibujar_simbolo_reciclaje((rect.centerx, rect.bottom - 25))
 
 
 def dibujar_icono_residuo(superficie, residuo, caja):
@@ -417,7 +437,7 @@ def dibujar_boton(rect, etiqueta):
 
 
 def dibujar_inicio():
-    """Dibuja la portada con los tres niveles y las reglas básicas."""
+    """Dibuja la portada con el resumen de los nueve niveles."""
     pantalla.fill(FONDO)
     dibujar_encabezado(silenciado)
     pygame.draw.rect(pantalla, (205, 211, 208), (40, 110, 1020, 450), border_radius=20)
@@ -426,35 +446,23 @@ def dibujar_inicio():
     texto(pantalla, "Arrastra cada residuo al contenedor que le corresponde.",
           FUENTE, TINTA_SUAVE, (ANCHO // 2, 231), centro=True)
 
-    resumen = [
-        ("20", "objetos", "45 segundos", NEGRO),
-        ("25", "objetos", "Más velocidad", AMARILLO),
-        ("30", "objetos", "Ritmo máximo", VIOLETA),
-    ]
-    for indice, (cantidad, etiqueta, detalle, color) in enumerate(resumen):
-        rect = pygame.Rect(145 + indice * 275, 288, 230, 126)
-        pygame.draw.rect(pantalla, color, rect, border_radius=14)
-        texto(pantalla, f"NIVEL {indice + 1}", FUENTE_CHICA, BLANCO,
-              (rect.centerx, rect.y + 25), centro=True)
-        texto(pantalla, cantidad, FUENTE_TITULO, BLANCO,
-              (rect.centerx, rect.y + 64), centro=True)
-        texto(pantalla, f"{etiqueta} · {detalle}", FUENTE_CHICA, BLANCO,
-              (rect.centerx, rect.y + 103), centro=True)
+    texto(pantalla, f"{len(NIVELES)} NIVELES · 45 SEGUNDOS CADA UNO",
+        FUENTE_GRANDE, TINTA, (ANCHO // 2, 281), centro=True)
+    for indice, contenedor in enumerate(CONTENEDORES):
+        rect = pygame.Rect(44 + indice * 253, 310, 245, 145)
+        dibujar_contenedor(contenedor, rect)
 
-    texto(pantalla, "Plástico · Papel y cartón · Electrónicos RAEE · Residuos mezclados",
-          FUENTE_MEDIA, TINTA, (ANCHO // 2, 464), centro=True)
     texto(pantalla, "ORT: más de 8 t de papel/cartón recicladas en 2024; casi 3 t de RAEE al año (2022-24).",
-          FUENTE_CHICA, TINTA, (ANCHO // 2, 500), centro=True)
+        FUENTE_CHICA, TINTA, (ANCHO // 2, 487), centro=True)
     texto(pantalla, "Fuente: Universidad ORT Uruguay, Cómo funciona ORT Recicla y qué impacto genera.",
-          FUENTE_CHICA, TINTA_SUAVE, (ANCHO // 2, 524), centro=True)
-    dibujar_boton(RECT_ACCION, "COMENZAR  ·  ESPACIO")
+        FUENTE_CHICA, TINTA_SUAVE, (ANCHO // 2, 509), centro=True)
+    dibujar_boton(RECT_ACCION, "COMENZAR (espacio)")
     texto(pantalla, "Un error o un residuo perdido termina el intento.", FUENTE_CHICA,
           TINTA_SUAVE, (ANCHO // 2, 711), centro=True)
 
 
-def dibujar_mensaje(titulo, detalle, indicacion, color=VERDE):
-    """Dibuja un panel de transición, derrota o victoria sobre la partida."""
-    dibujar_escena(1, DURACION_NIVEL, 0, 0, 0, [], 0, NIVELES[1]["velocidad"])
+def dibujar_popup(titulo, detalle, indicacion, color=VERDE):
+    """Dibuja el popup sobre la escena que ya está en pantalla."""
     velo = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
     velo.fill((20, 28, 29, 175))
     pantalla.blit(velo, (0, 0))
@@ -464,6 +472,12 @@ def dibujar_mensaje(titulo, detalle, indicacion, color=VERDE):
     texto(pantalla, titulo, FUENTE_TITULO, TINTA, (ANCHO // 2, 291), centro=True)
     texto(pantalla, detalle, FUENTE, TINTA_SUAVE, (ANCHO // 2, 356), centro=True)
     dibujar_boton(RECT_ACCION, indicacion)
+
+
+def dibujar_mensaje(titulo, detalle, indicacion, color=VERDE):
+    """Dibuja un panel de transición, derrota o victoria sobre la partida."""
+    dibujar_escena(1, DURACION_NIVEL, 0, 0, 0, [], 0, NIVELES[1]["velocidad"])
+    dibujar_popup(titulo, detalle, indicacion, color)
 
 
 def cargar_ranking():
@@ -532,10 +546,6 @@ def alternar_pausa(ahora=None):
         ahora = pygame.time.get_ticks()
     if estado == "jugando":
         if residuo_arrastrado is not None:
-            origen = residuo_arrastrado.get("posicion_origen")
-            if origen is not None:
-                residuo_arrastrado["rect"] = origen
-                residuo_arrastrado.posicion_x = float(origen.x)
             residuo_arrastrado["seleccionado"] = False
             residuo_arrastrado = None
         pausa_inicio = ahora
@@ -571,12 +581,12 @@ def iniciar_juego():
 
 
 def siguiente_nivel():
-    """Avanza un nivel o declara la victoria al terminar el tercero."""
+    """Avanza un nivel o termina la partida al completar el último."""
     global estado, nivel, puntaje_base_nivel, extras_restantes
     global residuos_pendientes, indice_residuo, inicio_nivel, reciclados, ultimo_aparicion
     global residuo_arrastrado
 
-    if nivel == 3:
+    if nivel == max(NIVELES):
         comenzar_fin_partida()
         return
 
@@ -721,7 +731,7 @@ def dibujar_resultado():
         texto(pantalla, "Todavía no hay puntajes registrados.", FUENTE,
               TINTA_SUAVE, (ANCHO // 2, 350), centro=True)
 
-    dibujar_boton(RECT_ACCION, "VOLVER AL INICIO  ·  ESPACIO")
+    dibujar_boton(RECT_ACCION, "VOLVER AL INICIO (espacio)")
 
 
 def dibujar_estado():
@@ -737,18 +747,24 @@ def dibujar_estado():
     elif estado == "nivel_completado":
         titulo = f"¡Nivel {nivel} superado!"
         detalle = "Separaste todos los residuos correctamente."
-        indicacion = "SIGUIENTE NIVEL  ·  ESPACIO" if nivel < 3 else "VER RESULTADO  ·  ESPACIO"
+        indicacion = ("SIGUIENTE NIVEL (espacio)" if nivel < max(NIVELES)
+                  else "VER RESULTADO (espacio)")
         dibujar_mensaje(titulo, detalle, indicacion)
     elif estado == "pausa":
-        dibujar_mensaje("Reciclaje en pausa", "El tiempo y la cinta están detenidos.",
-                        "CONTINUAR  ·  ESPACIO")
+        configuracion = NIVELES[nivel]
+        transcurrido = (pausa_inicio - inicio_nivel) / 1000
+        restante = max(0, DURACION_NIVEL - transcurrido)
+        dibujar_escena(nivel, restante, reciclados, configuracion["cantidad"], puntaje,
+                       residuos_activos, transcurrido, configuracion["velocidad"])
+        dibujar_popup("Reciclaje en pausa", "El tiempo y la cinta están detenidos.",
+                      "CONTINUAR (espacio)")
     elif estado == "ingresar_nombre":
         dibujar_entrada_nombre()
     elif estado == "fallo":
         if extras_restantes > 0:
             titulo = "Intento terminado"
             detalle = f"{motivo_fallo}  ·  Quedan {extras_restantes} intentos extra."
-            indicacion = "REINTENTAR NIVEL  ·  R"
+            indicacion = "REINTENTAR NIVEL (R)"
         else:
             titulo = "Nivel no superado"
             detalle = f"{motivo_fallo}  ·  Se agotaron los intentos extra."
@@ -831,7 +847,7 @@ def ejecutar_juego():
                                 "ingresar_nombre", "resultado"):
                     anterior = estado
                     procesar_clic(evento.pos)
-                    if estado == "jugando" and anterior != "jugando":
+                    if estado == "jugando" and anterior in ("inicio", "nivel_completado", "fallo"):
                         residuos_activos = []
                         if anterior == "nivel_completado":
                             reproducir(SONIDO_NIVEL, silenciado)
@@ -849,7 +865,10 @@ def ejecutar_juego():
 
             elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
                 if estado == "jugando" and residuo_arrastrado is not None:
-                    soltar_residuo(evento.pos)
+                    if RECT_PAUSA.collidepoint(evento.pos):
+                        alternar_pausa(ahora)
+                    else:
+                        soltar_residuo(evento.pos)
 
         if estado == "jugando":
             configuracion = NIVELES[nivel]
