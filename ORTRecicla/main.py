@@ -58,6 +58,10 @@ FUENTE = pygame.font.SysFont("arial", TAM_NORMAL)
 FUENTE_MEDIA = pygame.font.SysFont("arial", TAM_MEDIA, bold=True)
 FUENTE_CHICA = pygame.font.SysFont("arial", TAM_CHICA, bold=True)
 
+ARCHIVO_IMAGEN_MANO = Path(__file__).with_name("imagenes") / "Mano.png"
+IMAGEN_MANO = pygame.transform.smoothscale(
+    pygame.image.load(str(ARCHIVO_IMAGEN_MANO)).convert_alpha(), (40, 40)
+)
 ARCHIVO_IMAGEN_PAPELERAS = Path(__file__).with_name("imagenes") / "Papeleras.jpeg"
 IMAGEN_PAPELERAS_ORIGINAL = pygame.image.load(
     str(ARCHIVO_IMAGEN_PAPELERAS)
@@ -69,6 +73,7 @@ RECORTES_PAPELERAS = {
     "mezclado": pygame.Rect(1245, 156, 397, 661),
 }
 ALTO_IMAGEN_PAPELERA = CONTENEDORES_CONFIG[0]["rect"][3] + 32
+DURACION_BRILLO_PAPELERA = 420
 
 
 def quitar_fondo_blanco(imagen):
@@ -247,14 +252,9 @@ def texto(superficie, contenido, fuente, color, posicion, centro=False):
     return destino
 
 
-def dibujar_icono_mano(superficie, x, y, color):
-    """Dibuja el símbolo de arrastre junto a la instrucción de control."""
-    pygame.draw.circle(superficie, color, (x + 13, y + 8), 5)
-    pygame.draw.line(superficie, color, (x + 13, y + 13), (x + 13, y + 29), 4)
-    pygame.draw.line(superficie, color, (x + 13, y + 19), (x + 4, y + 15), 4)
-    pygame.draw.line(superficie, color, (x + 13, y + 19), (x + 22, y + 15), 4)
-    pygame.draw.line(superficie, color, (x + 13, y + 28), (x + 7, y + 35), 4)
-    pygame.draw.line(superficie, color, (x + 13, y + 28), (x + 19, y + 35), 4)
+def dibujar_icono_mano(superficie, x, y):
+    """Dibuja la imagen de mano junto a la instrucción de control."""
+    superficie.blit(IMAGEN_MANO, (x, y))
 
 
 def dibujar_icono_reloj(superficie, centro, color):
@@ -332,7 +332,7 @@ def dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje):
         pygame.draw.rect(pantalla, PANEL, caja, border_radius=13)
         pygame.draw.rect(pantalla, (207, 214, 211), caja, 1, border_radius=13)
 
-    dibujar_icono_mano(pantalla, 53, 113, VERDE)
+    dibujar_icono_mano(pantalla, 53, 113)
     texto(pantalla, "SELECCIONA", FUENTE_CHICA, TINTA_SUAVE, (88, 111))
     texto(pantalla, "Y ARRASTRA", FUENTE_MEDIA, TINTA, (88, 130))
 
@@ -400,6 +400,26 @@ def dibujar_contenedor(contenedor, rect=None):
               (centro_texto_x, inicio_texto_y + indice * 19), centro=True)
 
 
+def dibujar_brillo_papelera(contenedor, intensidad):
+    """Superpone un halo breve cuando se acierta el contenedor."""
+    rect = contenedor["rect"]
+    halo = pygame.Surface((rect.w + 24, rect.h + 24), pygame.SRCALPHA)
+    color = (255, 255, 220)
+    pygame.draw.rect(
+        halo, (*color, round(100 * intensidad)),
+        pygame.Rect(2, 2, rect.w + 20, rect.h + 20), 2, border_radius=16,
+    )
+    pygame.draw.rect(
+        halo, (*color, round(175 * intensidad)),
+        pygame.Rect(6, 6, rect.w + 12, rect.h + 12), 3, border_radius=14,
+    )
+    pygame.draw.rect(
+        halo, (*color, round(24 * intensidad)),
+        pygame.Rect(12, 12, rect.w, rect.h), border_radius=12,
+    )
+    pantalla.blit(halo, (rect.x - 12, rect.y - 12))
+
+
 def dibujar_icono_residuo(superficie, residuo, caja):
     """Dibuja el residuo usando su imagen con fondo transparente."""
     imagen = IMAGENES_RESIDUOS[residuo["imagen"]]
@@ -425,6 +445,12 @@ def dibujar_escena(nivel, tiempo_restante, reciclados, cantidad, puntaje,
     texto(pantalla, "DESTINO DEL RESIDUO", FUENTE_MEDIA, TINTA_SUAVE, (45, 517))
     for contenedor in CONTENEDORES:
         dibujar_contenedor(contenedor)
+        if papelera_brillo_tipo == contenedor["tipo"]:
+            progreso = (
+                pygame.time.get_ticks() - inicio_brillo_papelera
+            ) / DURACION_BRILLO_PAPELERA
+            if 0 <= progreso < 1:
+                dibujar_brillo_papelera(contenedor, (1 - progreso) ** 2)
 
     for residuo in residuos_activos:
         dibujar_residuo(residuo, residuo.get("seleccionado", False))
@@ -572,6 +598,7 @@ def iniciar_juego():
     global estado, nivel, puntaje, puntaje_base_nivel, extras_restantes
     global residuos_pendientes, reciclados, inicio_nivel, ultimo_aparicion
     global indice_residuo, residuo_arrastrado, motivo_fallo
+    global papelera_brillo_tipo
 
     estado = "jugando"
     nivel = 1
@@ -582,6 +609,7 @@ def iniciar_juego():
     ultimo_aparicion = inicio_nivel
     residuo_arrastrado = None
     motivo_fallo = ""
+    papelera_brillo_tipo = None
 
 
 def siguiente_nivel():
@@ -666,6 +694,7 @@ def procesar_clic(posicion):
 def soltar_residuo(posicion):
     """Clasifica el objeto soltado y suma puntos o termina el intento."""
     global residuo_arrastrado, reciclados, puntaje
+    global papelera_brillo_tipo, inicio_brillo_papelera
 
     if residuo_arrastrado is None:
         return
@@ -692,6 +721,8 @@ def soltar_residuo(posicion):
     residuo_arrastrado = None
     reciclados += 1
     puntaje += 100
+    papelera_brillo_tipo = destino["tipo"]
+    inicio_brillo_papelera = pygame.time.get_ticks()
     reproducir(SONIDO_ACIERTO, silenciado)
 
 
@@ -790,6 +821,8 @@ ultimo_aparicion = 0
 reciclados = 0
 residuo_arrastrado = None
 motivo_fallo = ""
+papelera_brillo_tipo = None
+inicio_brillo_papelera = 0
 silenciado = False
 residuos_activos = []
 pausa_inicio = 0
@@ -879,7 +912,7 @@ def ejecutar_juego():
             tiempo_transcurrido = (ahora - inicio_nivel) / 1000
             tiempo_restante = DURACION_NIVEL - tiempo_transcurrido
 
-            if tiempo_restante <= 0:
+            if tiempo_restante <= 0 and reciclados < configuracion["cantidad"]:
                 terminar_intento("Se terminó el tiempo.")
             else:
                 if (indice_residuo < configuracion["cantidad"]
@@ -897,7 +930,12 @@ def ejecutar_juego():
                         terminar_intento(f"Se perdió {residuo['nombre']} en la cinta.")
                         break
 
-                if estado == "jugando" and reciclados == configuracion["cantidad"]:
+                brillo_terminado = (
+                    ahora - inicio_brillo_papelera >= DURACION_BRILLO_PAPELERA
+                )
+                if (estado == "jugando"
+                        and reciclados == configuracion["cantidad"]
+                        and brillo_terminado):
                     estado = "nivel_completado"
                     reproducir(SONIDO_NIVEL, silenciado)
 
