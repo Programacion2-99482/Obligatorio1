@@ -58,12 +58,6 @@ FUENTE = pygame.font.SysFont("arial", TAM_NORMAL)
 FUENTE_MEDIA = pygame.font.SysFont("arial", TAM_MEDIA, bold=True)
 FUENTE_CHICA = pygame.font.SysFont("arial", TAM_CHICA, bold=True)
 
-ARCHIVO_IMAGEN_CAJA_JUGO = Path(__file__).with_name("imagenes") / "CajaJugo.png"
-IMAGEN_CAJA_JUGO = pygame.transform.smoothscale(
-    pygame.image.load(str(ARCHIVO_IMAGEN_CAJA_JUGO)).convert_alpha(),
-    (ANCHO_RESIDUO, ANCHO_RESIDUO),
-)
-
 ARCHIVO_IMAGEN_PAPELERAS = Path(__file__).with_name("imagenes") / "Papeleras.jpeg"
 IMAGEN_PAPELERAS_ORIGINAL = pygame.image.load(
     str(ARCHIVO_IMAGEN_PAPELERAS)
@@ -118,18 +112,43 @@ IMAGENES_CONTENEDORES = {
 
 
 RESIDUOS = [
-    {"tipo": "plastico", "nombre": "Botella plástica", "figura": "botella"},
-    {"tipo": "plastico", "nombre": "Vaso plástico", "figura": "vaso"},
-    {"tipo": "plastico", "nombre": "Envase plástico", "figura": "envase"},
-    {"tipo": "papel", "nombre": "Hoja de papel", "figura": "papel"},
-    {"tipo": "papel", "nombre": "Cuaderno", "figura": "cuaderno"},
-    {"tipo": "papel", "nombre": "Caja de cartón", "figura": "carton"},
-    {"tipo": "electronico", "nombre": "Teclado", "figura": "teclado"},
-    {"tipo": "electronico", "nombre": "Mouse", "figura": "mouse"},
-    {"tipo": "electronico", "nombre": "Cable", "figura": "cable"},
-    {"tipo": "mezclado", "nombre": "Cáscara de banana", "figura": "banana"},
-    {"tipo": "mezclado", "nombre": "Caja de jugo", "figura": "juice_box"},
+    {"tipo": "mezclado", "nombre": "Cáscara de banana", "imagen": "CáscaraDeBanana.png"},
+    {"tipo": "mezclado", "nombre": "Pincel", "imagen": "Pincel.png"},
+    {"tipo": "mezclado", "nombre": "Caja de jugo", "imagen": "CajaJugo.png"},
+    {"tipo": "mezclado", "nombre": "Medias", "imagen": "Medias.png"},
+    {"tipo": "electronico", "nombre": "Teclado", "imagen": "Teclado.png"},
+    {"tipo": "electronico", "nombre": "Mouse", "imagen": "Mouse.png"},
+    {"tipo": "electronico", "nombre": "Placa PC", "imagen": "PlacaPC.png"},
+    {"tipo": "electronico", "nombre": "Enchufe", "imagen": "Enchufe.png"},
+    {"tipo": "plastico", "nombre": "Botella plástica", "imagen": "BotellaPlástica.png"},
+    {"tipo": "plastico", "nombre": "Envase plástico", "imagen": "EnvasePlástico.png"},
+    {"tipo": "plastico", "nombre": "Cubiertos plásticos", "imagen": "CubiertosPlásticos.png"},
+    {"tipo": "plastico", "nombre": "Vaso plástico", "imagen": "VasoPlástico.png"},
+    {"tipo": "papel", "nombre": "Caja de cartón", "imagen": "CajaDeCartón.png"},
+    {"tipo": "papel", "nombre": "Cuaderno", "imagen": "Cuaderno.png"},
+    {"tipo": "papel", "nombre": "Hoja", "imagen": "Hoja.png"},
+    {"tipo": "papel", "nombre": "Post-it", "imagen": "Post-it.png"},
 ]
+
+def cargar_imagen_residuo(nombre_archivo):
+    """Carga cada residuo manteniendo su proporción dentro del área de juego."""
+    ruta = Path(__file__).with_name("imagenes") / nombre_archivo
+    imagen = pygame.image.load(str(ruta)).convert_alpha()
+    escala = min(
+        ANCHO_RESIDUO / imagen.get_width(),
+        ALTO_RESIDUO / imagen.get_height(),
+    )
+    tamano = (
+        round(imagen.get_width() * escala),
+        round(imagen.get_height() * escala),
+    )
+    return pygame.transform.smoothscale(imagen, tamano)
+
+
+IMAGENES_RESIDUOS = {
+    nombre_archivo: cargar_imagen_residuo(nombre_archivo)
+    for nombre_archivo in dict.fromkeys(residuo["imagen"] for residuo in RESIDUOS)
+}
 
 CONTENEDORES = [
     {**contenedor, "rect": pygame.Rect(*contenedor["rect"])}
@@ -382,64 +401,9 @@ def dibujar_contenedor(contenedor, rect=None):
 
 
 def dibujar_icono_residuo(superficie, residuo, caja):
-    """Dibuja la silueta individual del residuo sin un fondo de tarjeta."""
-    if residuo["figura"] == "juice_box":
-        superficie.blit(IMAGEN_CAJA_JUGO, IMAGEN_CAJA_JUGO.get_rect(center=caja.center))
-        return
-
-    x = caja.x + 4
-    y = caja.y + 2
-    figura = residuo["figura"]
-
-    if figura == "botella":
-        pygame.draw.rect(superficie, (89, 177, 213), (x + 11, y + 13, 23, 43), border_radius=6)
-        pygame.draw.rect(superficie, (89, 177, 213), (x + 16, y + 4, 13, 13))
-        pygame.draw.rect(superficie, (52, 111, 143), (x + 17, y, 11, 6), border_radius=2)
-        pygame.draw.rect(superficie, (201, 237, 239), (x + 13, y + 27, 19, 8), border_radius=3)
-    elif figura == "vaso":
-        pygame.draw.polygon(superficie, (97, 179, 210),
-                            [(x + 8, y + 12), (x + 37, y + 12), (x + 32, y + 52), (x + 14, y + 52)])
-        pygame.draw.line(superficie, (236, 247, 246), (x + 12, y + 17), (x + 34, y + 17), 3)
-    elif figura == "envase":
-        pygame.draw.rect(superficie, (82, 169, 202), (x + 7, y + 16, 33, 35), border_radius=6)
-        pygame.draw.rect(superficie, (193, 230, 230), (x + 11, y + 22, 25, 10), border_radius=3)
-        pygame.draw.rect(superficie, (61, 133, 164), (x + 14, y + 11, 18, 7), border_radius=3)
-    elif figura == "papel":
-        pygame.draw.rect(superficie, (250, 249, 240), (x + 7, y + 5, 32, 49), border_radius=3)
-        for linea in range(4):
-            pygame.draw.line(superficie, (115, 151, 167), (x + 12, y + 18 + linea * 8),
-                             (x + 34, y + 18 + linea * 8), 2)
-    elif figura == "cuaderno":
-        pygame.draw.rect(superficie, (229, 241, 238), (x + 8, y + 5, 31, 49), border_radius=3)
-        pygame.draw.line(superficie, (53, 132, 204), (x + 15, y + 8), (x + 15, y + 51), 3)
-        for linea in range(4):
-            pygame.draw.line(superficie, (145, 176, 181), (x + 19, y + 18 + linea * 8),
-                             (x + 34, y + 18 + linea * 8), 2)
-    elif figura == "carton":
-        pygame.draw.polygon(superficie, (190, 139, 81),
-                            [(x + 6, y + 19), (x + 22, y + 9), (x + 40, y + 19),
-                             (x + 40, y + 45), (x + 22, y + 55), (x + 6, y + 45)])
-        pygame.draw.line(superficie, (235, 200, 151), (x + 22, y + 10), (x + 22, y + 54), 2)
-        pygame.draw.line(superficie, (235, 200, 151), (x + 7, y + 20), (x + 22, y + 29), 2)
-    elif figura == "teclado":
-        pygame.draw.rect(superficie, (76, 86, 90), (x + 3, y + 15, 41, 31), border_radius=5)
-        for fila in range(3):
-            for columna in range(5):
-                pygame.draw.rect(superficie, (206, 211, 205),
-                                 (x + 8 + columna * 7, y + 20 + fila * 7, 4, 4), border_radius=1)
-    elif figura == "mouse":
-        pygame.draw.ellipse(superficie, (108, 120, 122), (x + 11, y + 5, 25, 49))
-        pygame.draw.line(superficie, (225, 229, 223), (x + 23, y + 9), (x + 23, y + 25), 2)
-        pygame.draw.line(superficie, (225, 229, 223), (x + 23, y + 22), (x + 23, y + 33), 2)
-    elif figura == "cable":
-        color_cable = (216, 224, 219)
-        pygame.draw.arc(superficie, color_cable, (x + 4, y + 7, 39, 43), 0.2, 5.9, 5)
-        pygame.draw.line(superficie, color_cable, (x + 7, y + 26), (x + 2, y + 26), 5)
-        pygame.draw.line(superficie, color_cable, (x + 40, y + 28), (x + 45, y + 28), 5)
-    elif figura == "banana":
-        pygame.draw.arc(superficie, (227, 186, 54), (x + 2, y + 11, 43, 37), 0.1, 2.9, 9)
-        pygame.draw.line(superficie, (115, 105, 56), (x + 4, y + 28), (x + 9, y + 32), 4)
-        pygame.draw.line(superficie, (115, 105, 56), (x + 39, y + 28), (x + 44, y + 24), 4)
+    """Dibuja el residuo usando su imagen con fondo transparente."""
+    imagen = IMAGENES_RESIDUOS[residuo["imagen"]]
+    superficie.blit(imagen, imagen.get_rect(center=caja.center))
 
 
 def dibujar_residuo(residuo, seleccionado=False):

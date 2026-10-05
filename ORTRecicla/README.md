@@ -29,26 +29,25 @@ python -m pip install pygame
 python main.py
 ```
 
-El juego dibuja las siluetas de los residuos con figuras de Pygame, excepto la caja de jugo, que usa `imagenes/CajaJugo.png`. Las cuatro papeleras se recortan de `imagenes/Papeleras.jpeg` y conservan los colores de cada categoría. Los efectos de sonido se generan al iniciar. Para volver a generar el informe, instala `reportlab` y ejecuta `python generar_informe.py`.
+El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` y las cuatro papeleras se recortan de `imagenes/Papeleras.jpeg`. Los efectos de sonido se generan al iniciar. Para volver a generar el informe, instala `reportlab` y ejecuta `python generar_informe.py`.
 
 ## Archivos
 
 - `main.py`: bucle de juego, clase `Residuo`, controles, dibujo y audio.
 - `ajustes.py`: colores, dimensiones, duración y velocidades de los niveles.
-- `imagenes/CajaJugo.png`: imagen de la caja de jugo que reemplaza el dibujo de fruta.
+- `imagenes/*.png`: imágenes transparentes de los 16 residuos.
 - `imagenes/Papeleras.jpeg`: imagen de referencia de las cuatro papeleras.
-- `imagenes/`: carpeta para los recursos gráficos del juego.
 - `generar_informe.py`: fuente reproducible del informe PDF y del afiche.
 - `Informe_ORT_Recicla.pdf`: inspiración, diagrama de flujo, proceso creativo y afiche A4.
 
 ## Fuentes y uso de IA
 
-La clasificación sigue la consigna del obligatorio y el programa institucional ORT Recicla. Las cifras de impacto de la portada se tomaron de [Cómo funciona el programa ORT Recicla y qué impacto genera](https://www.ort.edu.uy/la-universidad/sostenibilidad/como-funciona-ort-recicla-y-que-impacto-genera). Las formas de los residuos se dibujan en Pygame, las papeleras usan la imagen incluida en `imagenes/`, y los sonidos se sintetizan en tiempo de ejecución.
+La clasificación sigue la consigna del obligatorio y el programa institucional ORT Recicla. Las cifras de impacto de la portada se tomaron de [Cómo funciona el programa ORT Recicla y qué impacto genera](https://www.ort.edu.uy/la-universidad/sostenibilidad/como-funciona-ort-recicla-y-que-impacto-genera). Los residuos y las papeleras usan las imágenes incluidas en `imagenes/`, y los sonidos se sintetizan en tiempo de ejecución.
 
 Se utilizó **GitHub Copilot** como apoyo para idear, implementar y revisar inicialmente el código y la documentación. El estudiante debe revisar y verificar el contenido y declarar el contexto de uso en la entrega.
 
 ## Repositorio
 
-Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El repositorio local todavía no tiene commits. La consigna pide registrar commits reales, claros y repartidos en el tiempo; no se simularon ni inventaron.
+Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El historial se mantiene con commits reales y descriptivos, sin simular ni inventar actividad.
 
 **Antes de entregar:** completa el nombre y número de estudiante en el informe y confirma con el equipo docente el requisito de historial del repositorio.
