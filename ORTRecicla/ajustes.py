@@ -46,12 +46,12 @@ NIVELES = {
 }
 
 CONTENEDORES_CONFIG = (
-    {"tipo": "mezclado", "lineas": ("RESIDUOS", "MEZCLADOS"),
-     "color": NEGRO, "rect": (40, 552, 245, 145)},
     {"tipo": "plastico", "lineas": ("PLÁSTICO",),
-     "color": AMARILLO, "rect": (305, 552, 245, 145)},
+     "color": AMARILLO, "rect": (40, 552, 245, 145)},
     {"tipo": "electronico", "lineas": ("ELECTRÓNICOS", "(RAEE)"),
-     "color": VIOLETA, "rect": (570, 552, 245, 145)},
+     "color": VIOLETA, "rect": (305, 552, 245, 145)},
     {"tipo": "papel", "lineas": ("PAPEL Y CARTÓN",),
-     "color": AZUL, "rect": (835, 552, 245, 145)},
+     "color": AZUL, "rect": (570, 552, 245, 145)},
+    {"tipo": "mezclado", "lineas": ("RESIDUOS", "MEZCLADOS"),
+     "color": NEGRO, "rect": (835, 552, 245, 145)},
 )

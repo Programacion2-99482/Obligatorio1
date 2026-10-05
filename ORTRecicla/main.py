@@ -58,6 +58,64 @@ FUENTE = pygame.font.SysFont("arial", TAM_NORMAL)
 FUENTE_MEDIA = pygame.font.SysFont("arial", TAM_MEDIA, bold=True)
 FUENTE_CHICA = pygame.font.SysFont("arial", TAM_CHICA, bold=True)
 
+ARCHIVO_IMAGEN_CAJA_JUGO = Path(__file__).with_name("imagenes") / "CajaJugo.png"
+IMAGEN_CAJA_JUGO = pygame.transform.smoothscale(
+    pygame.image.load(str(ARCHIVO_IMAGEN_CAJA_JUGO)).convert_alpha(),
+    (ANCHO_RESIDUO, ANCHO_RESIDUO),
+)
+
+ARCHIVO_IMAGEN_PAPELERAS = Path(__file__).with_name("imagenes") / "Papeleras.jpeg"
+IMAGEN_PAPELERAS_ORIGINAL = pygame.image.load(
+    str(ARCHIVO_IMAGEN_PAPELERAS)
+).convert()
+RECORTES_PAPELERAS = {
+    "plastico": pygame.Rect(28, 156, 382, 661),
+    "electronico": pygame.Rect(443, 156, 374, 661),
+    "papel": pygame.Rect(847, 156, 374, 661),
+    "mezclado": pygame.Rect(1245, 156, 397, 661),
+}
+ALTO_IMAGEN_PAPELERA = CONTENEDORES_CONFIG[0]["rect"][3] + 32
+
+
+def quitar_fondo_blanco(imagen):
+    """Quita el fondo claro y sus sombras si están conectados al borde."""
+    mascara_blancos = pygame.mask.from_threshold(
+        imagen, (255, 255, 255), (85, 85, 85, 0)
+    )
+    fondo = pygame.mask.Mask(imagen.get_size())
+    ancho, alto = imagen.get_size()
+    bordes = (
+        [(x, 0) for x in range(ancho)]
+        + [(x, alto - 1) for x in range(ancho)]
+        + [(0, y) for y in range(1, alto - 1)]
+        + [(ancho - 1, y) for y in range(1, alto - 1)]
+    )
+
+    for punto in bordes:
+        if mascara_blancos.get_at(punto) and not fondo.get_at(punto):
+            fondo.draw(mascara_blancos.connected_component(punto), (0, 0))
+
+    imagen_con_alfa = imagen.convert_alpha()
+    for y in range(alto):
+        for x in range(ancho):
+            if fondo.get_at((x, y)):
+                imagen_con_alfa.set_at((x, y), (0, 0, 0, 0))
+    return imagen_con_alfa
+
+
+IMAGENES_CONTENEDORES = {
+    tipo: pygame.transform.smoothscale(
+        quitar_fondo_blanco(
+            IMAGEN_PAPELERAS_ORIGINAL.subsurface(recorte).copy()
+        ),
+        (
+            round(recorte.width * ALTO_IMAGEN_PAPELERA / recorte.height),
+            ALTO_IMAGEN_PAPELERA,
+        ),
+    )
+    for tipo, recorte in RECORTES_PAPELERAS.items()
+}
+
 
 RESIDUOS = [
     {"tipo": "plastico", "nombre": "Botella plástica", "figura": "botella"},
@@ -70,7 +128,7 @@ RESIDUOS = [
     {"tipo": "electronico", "nombre": "Mouse", "figura": "mouse"},
     {"tipo": "electronico", "nombre": "Cable", "figura": "cable"},
     {"tipo": "mezclado", "nombre": "Cáscara de banana", "figura": "banana"},
-    {"tipo": "mezclado", "nombre": "Cáscara de fruta", "figura": "fruta"},
+    {"tipo": "mezclado", "nombre": "Caja de jugo", "figura": "juice_box"},
 ]
 
 CONTENEDORES = [
@@ -304,47 +362,33 @@ def dibujar_cinta(tiempo_transcurrido, velocidad):
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.bottom - 8), 3)
 
 
-def dibujar_simbolo_reciclaje(centro, radio=17):
-    """Dibuja tres flechas de reciclaje sobre una base clara."""
-    pygame.draw.circle(pantalla, PANEL, centro, radio)
-    factor = radio / 17
-    flecha = [(-11, -3), (2, -3), (2, -7), (12, 0), (2, 7), (2, 3), (-11, 3)]
-    for angulo in (0, 120, 240):
-        radianes = math.radians(angulo)
-        puntos = []
-        for x, y in flecha:
-            x *= factor
-            y *= factor
-            puntos.append((
-                round(centro[0] + x * math.cos(radianes) - y * math.sin(radianes)),
-                round(centro[1] + x * math.sin(radianes) + y * math.cos(radianes)),
-            ))
-        pygame.draw.polygon(pantalla, VERDE, puntos)
-
-
 def dibujar_contenedor(contenedor, rect=None):
     """Dibuja una papelera con el color y rótulo de su categoría."""
     rect = contenedor["rect"] if rect is None else rect
     color = contenedor["color"]
     pygame.draw.rect(pantalla, (190, 196, 192), rect.move(0, 5), border_radius=12)
     pygame.draw.rect(pantalla, color, rect, border_radius=12)
-    borde = tuple(max(0, canal - 28) for canal in color)
-    pygame.draw.rect(pantalla, borde, (rect.x + 8, rect.y + 8, rect.w - 16, 30),
-                     border_radius=8)
-    pygame.draw.rect(pantalla, (26, 31, 33), (rect.x + 18, rect.y + 14,
-                                             rect.w - 36, 17), border_radius=8)
+    imagen = IMAGENES_CONTENEDORES[contenedor["tipo"]]
+    destino_imagen = imagen.get_rect(midright=(rect.right - 6, rect.centery))
+    pantalla.blit(imagen, destino_imagen)
+
+    ancho_texto = rect.w - imagen.get_width() - 24
+    centro_texto_x = rect.x + 9 + ancho_texto // 2
+    inicio_texto_y = rect.centery - (len(contenedor["lineas"]) - 1) * 9
+    color_texto = TINTA if contenedor["tipo"] == "plastico" else BLANCO
     for indice, linea in enumerate(contenedor["lineas"]):
-        texto(pantalla, linea, FUENTE_MEDIA, BLANCO,
-              (rect.centerx, rect.y + 59 + indice * 19), centro=True)
-    if contenedor["tipo"] != "mezclado":
-        dibujar_simbolo_reciclaje((rect.centerx, rect.bottom - 25))
+        texto(pantalla, linea, FUENTE_CHICA, color_texto,
+              (centro_texto_x, inicio_texto_y + indice * 19), centro=True)
 
 
 def dibujar_icono_residuo(superficie, residuo, caja):
     """Dibuja la silueta individual del residuo sin un fondo de tarjeta."""
+    if residuo["figura"] == "juice_box":
+        superficie.blit(IMAGEN_CAJA_JUGO, IMAGEN_CAJA_JUGO.get_rect(center=caja.center))
+        return
+
     x = caja.x + 4
     y = caja.y + 2
-    centro_x = x + 22
     figura = residuo["figura"]
 
     if figura == "botella":
@@ -396,10 +440,6 @@ def dibujar_icono_residuo(superficie, residuo, caja):
         pygame.draw.arc(superficie, (227, 186, 54), (x + 2, y + 11, 43, 37), 0.1, 2.9, 9)
         pygame.draw.line(superficie, (115, 105, 56), (x + 4, y + 28), (x + 9, y + 32), 4)
         pygame.draw.line(superficie, (115, 105, 56), (x + 39, y + 28), (x + 44, y + 24), 4)
-    elif figura == "fruta":
-        pygame.draw.circle(superficie, (193, 105, 74), (centro_x, y + 31), 18)
-        pygame.draw.line(superficie, (94, 105, 59), (centro_x, y + 14), (centro_x + 2, y + 7), 3)
-        pygame.draw.ellipse(superficie, (85, 145, 92), (centro_x + 1, y + 6, 12, 7))
 
 
 def dibujar_residuo(residuo, seleccionado=False):
