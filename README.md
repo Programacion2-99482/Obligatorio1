@@ -30,7 +30,7 @@ python -m pip install pygame
 python main.py
 ```
 
-El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` y las cuatro papeleras se recortan de `imagenes/Papeleras.jpeg`. Los efectos de sonido se generan al iniciar. Para volver a generar el informe, instala `reportlab` y ejecuta `python generar_informe.py`.
+El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` y las cuatro papeleras se recortan de `imagenes/Papeleras.jpeg`. Los efectos de sonido se generan al iniciar. 
 
 
 ## Archivos
@@ -39,17 +39,19 @@ El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` 
 - `ajustes.py`: colores, dimensiones, duración y velocidades de los niveles.
 - `imagenes/*.png`: imágenes transparentes de los 16 residuos.
 - `imagenes/Papeleras.jpeg`: imagen de referencia de las cuatro papeleras.
-- `generar_informe.py`: fuente reproducible del informe PDF de tres páginas.
-- `Informe_ORT_Recicla.pdf`: inspiración, diagrama de flujo y proceso creativo.
+
 
 ## Fuentes y uso de IA
 
-La clasificación sigue la consigna del obligatorio y el programa institucional ORT Recicla. Las cifras de impacto de la portada se tomaron de [Cómo funciona el programa ORT Recicla y qué impacto genera](https://www.ort.edu.uy/la-universidad/sostenibilidad/como-funciona-ort-recicla-y-que-impacto-genera). Los residuos y las papeleras usan las imágenes incluidas en `imagenes/`, y los sonidos se sintetizan en tiempo de ejecución.
+La clasificación sigue la consigna del obligatorio y el programa institucional ORT Recicla. https://www.ort.edu.uy/la-universidad/sostenibilidad/como-funciona-ort-recicla-y-que-impacto-genera 
+Los residuos y las papeleras usan las imágenes incluidas en `imagenes/`.
+Las imágenes que corresponden a los elementos a reciclar fueron elegidas de la página https://www.flaticon.com/free-icons/sheet  4 elementos para cada categoría.
+Efectos de sonido: elaboración de IA mediante síntesis de tonos en Python. Se generaron las muestras con math.sin y se reprodujeron usando pygame.mixer.Sound.
 
-Se utilizó **GitHub Copilot** como apoyo para implementar y revisar el código y la documentación. 
+
+Se utilizó **GitHub Copilot** como apoyo para implementar y revisar el código.    
 
 ## Repositorio
 
 Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El historial se mantiene con commits reales y descriptivos.
 
-**Datos** Nombre: Claudia Andrea. Número de estudiante: 99482. 
