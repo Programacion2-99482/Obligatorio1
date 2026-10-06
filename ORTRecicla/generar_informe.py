@@ -1,10 +1,10 @@
-"""Genera el informe PDF y el afiche A4 de ORT Recicla."""
+"""Genera el informe PDF de MISIÓN Reciclaje."""
 
 from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
@@ -203,111 +203,14 @@ def pagina_proceso(pdf):
     pdf.showPage()
 
 
-def icono_afiche(pdf, figura, centro_x, centro_y):
-    """Dibuja un residuo vectorial para el afiche promocional."""
-    pdf.saveState()
-    if figura == "botella":
-        pdf.setFillColor(colors.HexColor("#55B4D5"))
-        pdf.roundRect(centro_x - 12, centro_y - 24, 24, 42, 8, fill=1, stroke=0)
-        pdf.rect(centro_x - 7, centro_y + 17, 14, 8, fill=1, stroke=0)
-        pdf.setFillColor(colors.HexColor("#2F708A"))
-        pdf.rect(centro_x - 6, centro_y + 25, 12, 5, fill=1, stroke=0)
-    elif figura == "papel":
-        pdf.setFillColor(colors.HexColor("#F5F3E9"))
-        pdf.roundRect(centro_x - 20, centro_y - 28, 40, 58, 3, fill=1, stroke=0)
-        pdf.setStrokeColor(AZUL)
-        for linea in range(3):
-            pdf.line(centro_x - 13, centro_y + 8 - linea * 12,
-                     centro_x + 13, centro_y + 8 - linea * 12)
-    elif figura == "teclado":
-        pdf.setFillColor(colors.HexColor("#566165"))
-        pdf.roundRect(centro_x - 29, centro_y - 14, 58, 31, 4, fill=1, stroke=0)
-        pdf.setFillColor(colors.HexColor("#E4E9E5"))
-        for fila in range(3):
-            for columna in range(6):
-                pdf.rect(centro_x - 23 + columna * 8, centro_y - 7 + fila * 7,
-                         4, 3, fill=1, stroke=0)
-    else:
-        pdf.setStrokeColor(AMARILLO)
-        pdf.setLineWidth(10)
-        pdf.arc(centro_x - 28, centro_y - 14, centro_x + 28, centro_y + 20, 20, 145)
-    pdf.restoreState()
-
-
-def pagina_afiche(pdf):
-    """Crea el afiche promocional en una página A4 apaisada."""
-    ancho, alto = landscape(A4)
-    pdf.setPageSize((ancho, alto))
-    pdf.setFillColor(TINTA)
-    pdf.rect(0, 0, ancho, alto, fill=1, stroke=0)
-    pdf.setFillColor(VERDE)
-    pdf.rect(0, alto - 9, ancho, 9, fill=1, stroke=0)
-    pdf.setFillColor(colors.white)
-    pdf.setFont("Helvetica-Bold", 34)
-    pdf.drawString(38, alto - 70, "ORT RECICLA")
-    pdf.setFillColor(colors.HexColor("#BFE2D0"))
-    pdf.setFont("Helvetica-Bold", 21)
-    pdf.drawString(38, alto - 103, "MISIÓN RECICLAJE")
-    pdf.setFillColor(colors.HexColor("#D5DEDA"))
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(38, alto - 127, "La cinta no espera. ¿Puedes separar todos los residuos?")
-
-    banda_y = 294
-    pdf.setFillColor(colors.HexColor("#485354"))
-    pdf.roundRect(36, banda_y, ancho - 72, 105, 18, fill=1, stroke=0)
-    pdf.setFillColor(colors.HexColor("#252B2D"))
-    pdf.roundRect(47, banda_y + 12, ancho - 94, 81, 12, fill=1, stroke=0)
-    pdf.setStrokeColor(colors.HexColor("#586466"))
-    pdf.setLineWidth(2)
-    for x in range(62, int(ancho - 52), 42):
-        pdf.line(x, banda_y + 20, x, banda_y + 85)
-
-    simbolos = ["botella", "papel", "teclado", "banana"]
-    nombres = ["BOTELLA", "CUADERNO", "TECLADO", "CÁSCARA"]
-    for indice, (simbolo, nombre) in enumerate(zip(simbolos, nombres)):
-        centro_x = 115 + indice * 200
-        icono_afiche(pdf, simbolo, centro_x, banda_y + 58)
-        pdf.setFillColor(colors.white)
-        pdf.setFont("Helvetica-Bold", 8)
-        pdf.drawCentredString(centro_x, banda_y + 5, nombre)
-
-    papelera = [
-        ("RESIDUOS MEZCLADOS", NEGRO, colors.white),
-        ("PLÁSTICO", AMARILLO, TINTA),
-        ("ELECTRÓNICOS RAEE", VIOLETA, colors.white),
-        ("PAPEL Y CARTÓN", AZUL, colors.white),
-    ]
-    margen = 38
-    espacio = 13
-    ancho_bin = (ancho - 2 * margen - 3 * espacio) / 4
-    for indice, (rotulo, color, texto_color) in enumerate(papelera):
-        x = margen + indice * (ancho_bin + espacio)
-        pdf.setFillColor(color)
-        pdf.roundRect(x, 110, ancho_bin, 112, 10, fill=1, stroke=0)
-        pdf.setFillColor(colors.HexColor("#1A2022"))
-        pdf.roundRect(x + 15, 199, ancho_bin - 30, 15, 6, fill=1, stroke=0)
-        pdf.setFillColor(texto_color)
-        pdf.setFont("Helvetica-Bold", 9)
-        pdf.drawCentredString(x + ancho_bin / 2, 158, rotulo)
-
-    pdf.setFillColor(colors.HexColor("#BFE2D0"))
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawCentredString(ancho / 2, 72, "9 NIVELES  ·  45 SEGUNDOS  ·  ARRASTRA Y RECICLA")
-    pdf.setFillColor(colors.HexColor("#D5DEDA"))
-    pdf.setFont("Helvetica", 8)
-    pdf.drawCentredString(ancho / 2, 50, "Inspirado en el programa ORT Recicla")
-    pdf.showPage()
-
-
 def generar_pdf():
-    """Genera las tres páginas de informe y el afiche A4 final."""
+    """Genera las tres páginas del informe."""
     documento = canvas.Canvas(str(SALIDA), pagesize=A4)
     documento.setTitle("ORT Recicla: Misión reciclaje")
     documento.setAuthor("Completar nombre del estudiante")
     pagina_inspiracion(documento)
     pagina_flujo(documento)
     pagina_proceso(documento)
-    pagina_afiche(documento)
     documento.save()
 
 

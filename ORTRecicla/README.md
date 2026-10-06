@@ -1,6 +1,6 @@
-# ORT Recicla: Misión reciclaje
+# Misión reciclaje:
 
-Juego arcade en Python y Pygame. Arrastra cada residuo desde la cinta a su papelera antes de que salga de la pantalla.
+Juego arcade en Python y Pygame. Arrastra cada residuo desde la cinta a su papelera antes de que caiga de la cinta transportadora.
 
 ## Cómo jugar
 
@@ -18,7 +18,7 @@ Juego arcade en Python y Pygame. Arrastra cada residuo desde la cinta a su papel
 	- Nivel 7: 35 elementos a 148 px/s.
 	- Nivel 8: 40 elementos a 148 px/s.
 	- Nivel 9: 40 elementos a 168 px/s.
-- Un residuo mal clasificado, perdido o el tiempo agotado termina el intento. Hay dos reintentos adicionales en el nivel actual.
+- Un residuo mal clasificado, caido o el tiempo agotado termina la partida. Hay dos reintentos adicionales en el nivel actual.
 - Pulsa **Espacio** para continuar y **R** para reintentar. **Esc** cierra el juego.
 
 ## Instalación y ejecución
@@ -32,23 +32,24 @@ python main.py
 
 El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` y las cuatro papeleras se recortan de `imagenes/Papeleras.jpeg`. Los efectos de sonido se generan al iniciar. Para volver a generar el informe, instala `reportlab` y ejecuta `python generar_informe.py`.
 
+
 ## Archivos
 
 - `main.py`: bucle de juego, clase `Residuo`, controles, dibujo y audio.
 - `ajustes.py`: colores, dimensiones, duración y velocidades de los niveles.
 - `imagenes/*.png`: imágenes transparentes de los 16 residuos.
 - `imagenes/Papeleras.jpeg`: imagen de referencia de las cuatro papeleras.
-- `generar_informe.py`: fuente reproducible del informe PDF y del afiche.
-- `Informe_ORT_Recicla.pdf`: inspiración, diagrama de flujo, proceso creativo y afiche A4.
+- `generar_informe.py`: fuente reproducible del informe PDF de tres páginas.
+- `Informe_ORT_Recicla.pdf`: inspiración, diagrama de flujo y proceso creativo.
 
 ## Fuentes y uso de IA
 
 La clasificación sigue la consigna del obligatorio y el programa institucional ORT Recicla. Las cifras de impacto de la portada se tomaron de [Cómo funciona el programa ORT Recicla y qué impacto genera](https://www.ort.edu.uy/la-universidad/sostenibilidad/como-funciona-ort-recicla-y-que-impacto-genera). Los residuos y las papeleras usan las imágenes incluidas en `imagenes/`, y los sonidos se sintetizan en tiempo de ejecución.
 
-Se utilizó **GitHub Copilot** como apoyo para idear, implementar y revisar inicialmente el código y la documentación. El estudiante debe revisar y verificar el contenido y declarar el contexto de uso en la entrega.
+Se utilizó **GitHub Copilot** como apoyo para implementar y revisar el código y la documentación. 
 
 ## Repositorio
 
-Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El historial se mantiene con commits reales y descriptivos, sin simular ni inventar actividad.
+Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El historial se mantiene con commits reales y descriptivos.
 
-**Antes de entregar:** completa el nombre y número de estudiante en el informe y confirma con el equipo docente el requisito de historial del repositorio.
+**Datos** Nombre: Claudia Andrea. Número de estudiante: 99482. 

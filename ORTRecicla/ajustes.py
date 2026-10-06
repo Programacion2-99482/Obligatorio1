@@ -1,4 +1,4 @@
-"""Constantes de pantalla, estilo y dificultad de ORT Recicla."""
+"""Constantes de pantalla, estilo y dificultad de Misión Reciclaje."""
 
 ANCHO = 1100
 ALTO = 760

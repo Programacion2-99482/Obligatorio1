@@ -47,7 +47,7 @@ except pygame.error:
     pass
 
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("ORT Recicla | Misión reciclaje")
+pygame.display.set_caption("MISIÓN Reciclaje")
 reloj = pygame.time.Clock()
 
 FUENTE_TITULO = pygame.font.SysFont("arial", TAM_TITULO, bold=True)
@@ -56,6 +56,11 @@ FUENTE = pygame.font.SysFont("arial", TAM_NORMAL)
 FUENTE_MEDIA = pygame.font.SysFont("arial", TAM_MEDIA, bold=True)
 FUENTE_CHICA = pygame.font.SysFont("arial", TAM_CHICA, bold=True)
 
+ARCHIVO_IMAGEN_FONDO_INICIO = Path(__file__).with_name("imagenes") / "FondoR.jpg"
+IMAGEN_FONDO_INICIO = pygame.transform.smoothscale(
+    pygame.image.load(str(ARCHIVO_IMAGEN_FONDO_INICIO)).convert(),
+    (ANCHO, ALTO),
+)
 ARCHIVO_IMAGEN_MANO = Path(__file__).with_name("imagenes") / "Mano.png"
 IMAGEN_MANO = pygame.transform.smoothscale(
     pygame.image.load(str(ARCHIVO_IMAGEN_MANO)).convert_alpha(), (40, 40)
@@ -72,6 +77,19 @@ RECORTES_PAPELERAS = {
 }
 ALTO_IMAGEN_PAPELERA = CONTENEDORES_CONFIG[0]["rect"][3] + 32
 DURACION_BRILLO_PAPELERA = 420
+RADIO_BRILLO_PAPELERA = 48
+IMAGEN_BRILLO_PAPELERA = pygame.Surface(
+    (RADIO_BRILLO_PAPELERA * 2, RADIO_BRILLO_PAPELERA * 2),
+    pygame.SRCALPHA,
+)
+for radio in range(RADIO_BRILLO_PAPELERA, 0, -1):
+    opacidad = round(210 * (1 - radio / RADIO_BRILLO_PAPELERA) ** 0.8)
+    pygame.draw.circle(
+        IMAGEN_BRILLO_PAPELERA,
+        (255, 255, 255, opacidad),
+        (RADIO_BRILLO_PAPELERA, RADIO_BRILLO_PAPELERA),
+        radio,
+    )
 
 def quitar_fondo_blanco(imagen):
     """Quita el fondo claro y sus sombras si están conectados al borde."""
@@ -342,8 +360,9 @@ def dibujar_encabezado(silenciado):
     """Dibuja la cabecera del juego y el botón de sonido."""
     pygame.draw.rect(pantalla, TINTA, (0, 0, ANCHO, 78))
     pygame.draw.rect(pantalla, VERDE, (0, 74, ANCHO, 4))
-    texto(pantalla, "ORT", FUENTE_TITULO, BLANCO, (38, 17))
-    texto(pantalla, "Recicla", FUENTE_TITULO, (132, 205, 174), (122, 17))
+    titulo_mision = texto(pantalla, "MISIÓN", FUENTE_TITULO, BLANCO, (38, 17))
+    texto(pantalla, "Reciclaje", FUENTE_TITULO, (132, 205, 174),
+          (titulo_mision.right + 9, 17))
     if estado in ("jugando", "pausa"):
         pygame.draw.rect(pantalla, (54, 63, 65), RECT_PAUSA, border_radius=12)
         dibujar_icono_pausa(pantalla, RECT_PAUSA, estado == "pausa")
@@ -412,7 +431,7 @@ def dibujar_cinta(tiempo_transcurrido, velocidad):
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.y + 8), 3)
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.bottom - 8), 3)
 
-def dibujar_contenedor(contenedor, rect=None):
+def dibujar_contenedor(contenedor, rect=None, intensidad_brillo=0):
     """Dibuja una papelera con el color y rótulo de su categoría."""
     rect = contenedor["rect"] if rect is None else rect
     color = contenedor["color"]
@@ -420,34 +439,24 @@ def dibujar_contenedor(contenedor, rect=None):
     pygame.draw.rect(pantalla, color, rect, border_radius=12)
     imagen = IMAGENES_CONTENEDORES[contenedor["tipo"]]
     destino_imagen = imagen.get_rect(midright=(rect.right - 6, rect.centery))
-    pantalla.blit(imagen, destino_imagen)
-
     ancho_texto = rect.w - imagen.get_width() - 24
     centro_texto_x = rect.x + 9 + ancho_texto // 2
+    if intensidad_brillo > 0:
+        IMAGEN_BRILLO_PAPELERA.set_alpha(round(255 * intensidad_brillo))
+        clip_anterior = pantalla.get_clip()
+        pantalla.set_clip(rect)
+        pantalla.blit(
+            IMAGEN_BRILLO_PAPELERA,
+            IMAGEN_BRILLO_PAPELERA.get_rect(center=(centro_texto_x, rect.centery)),
+        )
+        pantalla.set_clip(clip_anterior)
+    pantalla.blit(imagen, destino_imagen)
+
     inicio_texto_y = rect.centery - (len(contenedor["lineas"]) - 1) * 9
     color_texto = TINTA if contenedor["tipo"] == "plastico" else BLANCO
     for indice, linea in enumerate(contenedor["lineas"]):
         texto(pantalla, linea, FUENTE_CHICA, color_texto,
               (centro_texto_x, inicio_texto_y + indice * 19), centro=True)
-
-def dibujar_brillo_papelera(contenedor, intensidad):
-    """Superpone un halo breve cuando se acierta el contenedor."""
-    rect = contenedor["rect"]
-    halo = pygame.Surface((rect.w + 24, rect.h + 24), pygame.SRCALPHA)
-    color = (255, 255, 220)
-    pygame.draw.rect(
-        halo, (*color, round(100 * intensidad)),
-        pygame.Rect(2, 2, rect.w + 20, rect.h + 20), 2, border_radius=16,
-    )
-    pygame.draw.rect(
-        halo, (*color, round(175 * intensidad)),
-        pygame.Rect(6, 6, rect.w + 12, rect.h + 12), 3, border_radius=14,
-    )
-    pygame.draw.rect(
-        halo, (*color, round(24 * intensidad)),
-        pygame.Rect(12, 12, rect.w, rect.h), border_radius=12,
-    )
-    pantalla.blit(halo, (rect.x - 12, rect.y - 12))
 
 def dibujar_icono_residuo(superficie, residuo, caja):
     """Dibuja el residuo usando su imagen con fondo transparente."""
@@ -470,13 +479,14 @@ def dibujar_escena(nivel, tiempo_restante, reciclados, cantidad, puntaje,
     dibujar_cinta(tiempo_transcurrido, velocidad)
 
     for contenedor in CONTENEDORES:
-        dibujar_contenedor(contenedor)
+        intensidad_brillo = 0
         if papelera_brillo_tipo == contenedor["tipo"]:
             progreso = (
                 pygame.time.get_ticks() - inicio_brillo_papelera
             ) / DURACION_BRILLO_PAPELERA
             if 0 <= progreso < 1:
-                dibujar_brillo_papelera(contenedor, (1 - progreso) ** 2)
+                intensidad_brillo = (1 - progreso) ** 2
+        dibujar_contenedor(contenedor, intensidad_brillo=intensidad_brillo)
 
     for residuo in residuos_activos:
         dibujar_residuo(residuo, residuo.get("seleccionado", False))
@@ -493,16 +503,19 @@ def dibujar_boton(rect, etiqueta):
 def dibujar_inicio():
     """Dibuja la portada con las reglas y las categorías de reciclaje."""
     pantalla.fill(FONDO)
+    pantalla.blit(IMAGEN_FONDO_INICIO, (0, 0))
     dibujar_encabezado(silenciado)
-    pygame.draw.rect(pantalla, (205, 211, 208), (40, 110, 1020, 450), border_radius=20)
-    pygame.draw.rect(pantalla, PANEL, (46, 116, 1008, 438), border_radius=16)
+    pygame.draw.rect(pantalla, (205, 211, 208), (40, 94, 1020, 606), border_radius=20)
+    pygame.draw.rect(pantalla, PANEL, (46, 100, 1008, 594), border_radius=16)
     texto(pantalla, "Arrastra cada residuo a la papelera correspondiente.",
-          FUENTE_GRANDE, TINTA, (ANCHO // 2, 153), centro=True)
+          FUENTE_GRANDE, TINTA, (ANCHO // 2, 142), centro=True)
     texto(pantalla, f"Completa los {len(NIVELES)} niveles de {DURACION_NIVEL} segundos cada uno.",
-          FUENTE_MEDIA, TINTA_SUAVE, (ANCHO // 2, 191), centro=True)
+          FUENTE_MEDIA, TINTA_SUAVE, (ANCHO // 2, 181), centro=True)
+    texto(pantalla, "Un error o un residuo caído termina la partida.",
+          FUENTE_CHICA, TINTA_SUAVE, (ANCHO // 2, 210), centro=True)
 
     for indice, contenedor in enumerate(CONTENEDORES):
-        rect = pygame.Rect(44 + indice * 253, 237, 245, 145)
+        rect = pygame.Rect(52 + indice * 250, 246, 245, 145)
         dibujar_contenedor(contenedor, rect)
 
         residuos_categoria = [
@@ -512,13 +525,11 @@ def dibujar_inicio():
         for indice_residuo, residuo in enumerate(residuos_categoria):
             centro_x = rect.x + round((indice_residuo + 0.5) * rect.w / 4)
             icono = IMAGENES_RESIDUOS_PORTADA[residuo["imagen"]]
-            pantalla.blit(icono, icono.get_rect(center=(centro_x, 432)))
+            pantalla.blit(icono, icono.get_rect(center=(centro_x, 452)))
 
-    texto(pantalla, "Reciclá en el videojuego y también en la Universidad.",
-          FUENTE_GRANDE, VERDE, (ANCHO // 2, 508), centro=True)
+    texto(pantalla, "Sumá puntos y conseguí tu lugar en el TOP 5.",
+          FUENTE_GRANDE, VERDE, (ANCHO // 2, 533), centro=True)
     dibujar_boton(RECT_ACCION, "COMENZAR (espacio)")
-    texto(pantalla, "Un error o un residuo perdido termina el intento.", FUENTE_CHICA,
-          TINTA_SUAVE, (ANCHO // 2, 711), centro=True)
 
 def dibujar_popup(titulo, detalle, indicacion, color=VERDE):
     """Dibuja el popup sobre la escena que ya está en pantalla."""
