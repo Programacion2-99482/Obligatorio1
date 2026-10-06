@@ -7,6 +7,7 @@ Juego arcade en Python y Pygame. Arrastra cada residuo desde la cinta a su papel
 - Pulsa **Espacio** o haz clic en **Comenzar**.
 - Haz clic sobre un residuo, arrástralo a la papelera correcta y suelta el botón del mouse.
 - Pulsa el botón de volumen para silenciar o restaurar los efectos.
+- Usa el botón de la copa para consultar el ranking durante una partida; el nivel queda pausado hasta que vuelvas.
 - Cada uno de los nueve niveles dura 45 segundos:
 	- Nivel 1: 20 elementos a 58 px/s.
 	- Nivel 2: 20 elementos a 88 px/s.

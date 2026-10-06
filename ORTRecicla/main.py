@@ -1,5 +1,4 @@
 # Asistencia de IAG: GitHub Copilot, para implementacion y pruebas iniciales.
-# El estudiante debe revisar el codigo y declarar este apoyo en la entrega.
 import array
 import json
 import math
@@ -27,6 +26,7 @@ from ajustes import (
     PANEL,
     RECT_ACCION as RECT_ACCION_CONFIG,
     RECT_PAUSA as RECT_PAUSA_CONFIG,
+    RECT_RANKING as RECT_RANKING_CONFIG,
     RECT_SILENCIO as RECT_SILENCIO_CONFIG,
     ROJO,
     TAM_CHICA,
@@ -40,7 +40,6 @@ from ajustes import (
     VIOLETA,
 )
 
-
 pygame.init()
 try:
     pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
@@ -50,7 +49,6 @@ except pygame.error:
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("ORT Recicla | Misión reciclaje")
 reloj = pygame.time.Clock()
-
 
 FUENTE_TITULO = pygame.font.SysFont("arial", TAM_TITULO, bold=True)
 FUENTE_GRANDE = pygame.font.SysFont("arial", TAM_GRANDE, bold=True)
@@ -74,7 +72,6 @@ RECORTES_PAPELERAS = {
 }
 ALTO_IMAGEN_PAPELERA = CONTENEDORES_CONFIG[0]["rect"][3] + 32
 DURACION_BRILLO_PAPELERA = 420
-
 
 def quitar_fondo_blanco(imagen):
     """Quita el fondo claro y sus sombras si están conectados al borde."""
@@ -115,7 +112,6 @@ IMAGENES_CONTENEDORES = {
     for tipo, recorte in RECORTES_PAPELERAS.items()
 }
 
-
 RESIDUOS = [
     {"tipo": "mezclado", "nombre": "Cáscara de banana", "imagen": "CáscaraDeBanana.png"},
     {"tipo": "mezclado", "nombre": "Pincel", "imagen": "Pincel.png"},
@@ -149,10 +145,29 @@ def cargar_imagen_residuo(nombre_archivo):
     )
     return pygame.transform.smoothscale(imagen, tamano)
 
-
 IMAGENES_RESIDUOS = {
     nombre_archivo: cargar_imagen_residuo(nombre_archivo)
     for nombre_archivo in dict.fromkeys(residuo["imagen"] for residuo in RESIDUOS)
+}
+
+def crear_icono_portada(imagen):
+    """Centra cada residuo en un recuadro uniforme sin deformar su imagen."""
+    tamano = 42
+    escala = min(tamano / imagen.get_width(), tamano / imagen.get_height())
+    imagen_ajustada = pygame.transform.smoothscale(
+        imagen,
+        (
+            round(imagen.get_width() * escala),
+            round(imagen.get_height() * escala),
+        ),
+    )
+    icono = pygame.Surface((tamano, tamano), pygame.SRCALPHA)
+    icono.blit(imagen_ajustada, imagen_ajustada.get_rect(center=(tamano // 2, tamano // 2)))
+    return icono
+
+IMAGENES_RESIDUOS_PORTADA = {
+    nombre: crear_icono_portada(imagen)
+    for nombre, imagen in IMAGENES_RESIDUOS.items()
 }
 
 CONTENEDORES = [
@@ -164,11 +179,11 @@ AREA_CINTA = pygame.Rect(*AREA_CINTA_CONFIG)
 AREA_PISTA = pygame.Rect(*AREA_PISTA_CONFIG)
 RECT_SILENCIO = pygame.Rect(*RECT_SILENCIO_CONFIG)
 RECT_PAUSA = pygame.Rect(*RECT_PAUSA_CONFIG)
+RECT_RANKING = pygame.Rect(*RECT_RANKING_CONFIG)
 RECT_ACCION = pygame.Rect(*RECT_ACCION_CONFIG)
 ARCHIVO_RANKING = Path(__file__).with_name("ranking.json")
 LIMITE_RANKING = 5
 LIMITE_NOMBRE = 10
-
 
 class Residuo(dict):
     """Residuo seleccionable que avanza con la banda de la cinta."""
@@ -210,17 +225,14 @@ def crear_efecto(frecuencias, duracion=0.11):
 
     return pygame.mixer.Sound(buffer=muestras.tobytes())
 
-
 SONIDO_ACIERTO = crear_efecto((660, 880))
 SONIDO_ERROR = crear_efecto((210, 155), 0.16)
 SONIDO_NIVEL = crear_efecto((523, 659, 784), 0.09)
-
 
 def reproducir(sonido, silenciado):
     """Reproduce un efecto si existe y el audio no está silenciado."""
     if sonido is not None and not silenciado:
         sonido.play()
-
 
 def preparar_residuos(cantidad):
     """Crea una lista aleatoria que siempre contiene las cuatro categorías."""
@@ -239,7 +251,6 @@ def preparar_residuos(cantidad):
         for residuo in seleccionados
     ]
 
-
 def texto(superficie, contenido, fuente, color, posicion, centro=False):
     """Dibuja texto alineado por esquina o por centro y devuelve su rectángulo."""
     imagen = fuente.render(contenido, True, color)
@@ -251,18 +262,15 @@ def texto(superficie, contenido, fuente, color, posicion, centro=False):
     superficie.blit(imagen, destino)
     return destino
 
-
 def dibujar_icono_mano(superficie, x, y):
     """Dibuja la imagen de mano junto a la instrucción de control."""
     superficie.blit(IMAGEN_MANO, (x, y))
-
 
 def dibujar_icono_reloj(superficie, centro, color):
     """Dibuja el icono de cuenta regresiva."""
     pygame.draw.circle(superficie, color, centro, 17, 3)
     pygame.draw.line(superficie, color, centro, (centro[0], centro[1] - 10), 3)
     pygame.draw.line(superficie, color, centro, (centro[0] + 8, centro[1] + 5), 3)
-
 
 def dibujar_estrella(superficie, centro, radio, color):
     """Dibuja una estrella rellena para el contador de objetos."""
@@ -273,7 +281,6 @@ def dibujar_estrella(superficie, centro, radio, color):
         puntos.append((centro[0] + math.cos(angulo) * distancia,
                        centro[1] + math.sin(angulo) * distancia))
     pygame.draw.polygon(superficie, color, puntos)
-
 
 def dibujar_icono_volumen(superficie, rect, silenciado):
     """Dibuja el altavoz y su marca de silencio cuando corresponda."""
@@ -291,7 +298,6 @@ def dibujar_icono_volumen(superficie, rect, silenciado):
     else:
         pygame.draw.arc(superficie, BLANCO, (rect.x + 27, centro_y - 11, 20, 22), -1.1, 1.1, 2)
 
-
 def dibujar_icono_pausa(superficie, rect, pausado=False):
     """Dibuja pausa o continuar dentro del botón de la cabecera."""
     centro_x, centro_y = rect.center
@@ -305,20 +311,47 @@ def dibujar_icono_pausa(superficie, rect, pausado=False):
         pygame.draw.rect(superficie, BLANCO, (centro_x - 10, centro_y - 12, 6, 24), border_radius=2)
         pygame.draw.rect(superficie, BLANCO, (centro_x + 4, centro_y - 12, 6, 24), border_radius=2)
 
+def dibujar_icono_copa(superficie, rect):
+    """Dibuja una copa sencilla dentro del botón de la cabecera."""
+    centro_x, centro_y = rect.center
+    pygame.draw.polygon(superficie, BLANCO, [
+        (centro_x - 10, centro_y - 12),
+        (centro_x + 10, centro_y - 12),
+        (centro_x + 8, centro_y - 1),
+        (centro_x + 4, centro_y + 5),
+        (centro_x - 4, centro_y + 5),
+        (centro_x - 8, centro_y - 1),
+    ])
+    pygame.draw.lines(superficie, BLANCO, False, [
+        (centro_x - 10, centro_y - 8),
+        (centro_x - 16, centro_y - 8),
+        (centro_x - 15, centro_y),
+        (centro_x - 8, centro_y + 2),
+    ], 3)
+    pygame.draw.lines(superficie, BLANCO, False, [
+        (centro_x + 10, centro_y - 8),
+        (centro_x + 16, centro_y - 8),
+        (centro_x + 15, centro_y),
+        (centro_x + 8, centro_y + 2),
+    ], 3)
+    pygame.draw.rect(superficie, BLANCO, (centro_x - 2, centro_y + 5, 4, 7))
+    pygame.draw.rect(superficie, BLANCO, (centro_x - 8, centro_y + 11, 16, 3),
+                     border_radius=2)
 
 def dibujar_encabezado(silenciado):
     """Dibuja la cabecera del juego y el botón de sonido."""
     pygame.draw.rect(pantalla, TINTA, (0, 0, ANCHO, 78))
     pygame.draw.rect(pantalla, VERDE, (0, 74, ANCHO, 4))
     texto(pantalla, "ORT", FUENTE_TITULO, BLANCO, (38, 17))
-    texto(pantalla, "RECICLA", FUENTE_TITULO, (132, 205, 174), (122, 17))
-    texto(pantalla, "MISIÓN RECICLAJE", FUENTE_MEDIA, (206, 216, 213), (322, 30))
+    texto(pantalla, "Recicla", FUENTE_TITULO, (132, 205, 174), (122, 17))
     if estado in ("jugando", "pausa"):
         pygame.draw.rect(pantalla, (54, 63, 65), RECT_PAUSA, border_radius=12)
         dibujar_icono_pausa(pantalla, RECT_PAUSA, estado == "pausa")
+    if estado in ("jugando", "pausa", "ranking"):
+        pygame.draw.rect(pantalla, (54, 63, 65), RECT_RANKING, border_radius=12)
+        dibujar_icono_copa(pantalla, RECT_RANKING)
     pygame.draw.rect(pantalla, (54, 63, 65), RECT_SILENCIO, border_radius=12)
     dibujar_icono_volumen(pantalla, RECT_SILENCIO, silenciado)
-
 
 def dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje):
     """Dibuja controles, tiempo, progreso, nivel y puntaje."""
@@ -359,7 +392,6 @@ def dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje):
     pygame.draw.rect(pantalla, VERDE, (barra.x, barra.y, int(barra.w * progreso), barra.h),
                      border_radius=5)
 
-
 def dibujar_cinta(tiempo_transcurrido, velocidad):
     """Dibuja la cinta y mueve sus marcas a la velocidad de los residuos."""
     pygame.draw.rect(pantalla, (198, 204, 200), AREA_CINTA, border_radius=24)
@@ -380,7 +412,6 @@ def dibujar_cinta(tiempo_transcurrido, velocidad):
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.y + 8), 3)
         pygame.draw.circle(pantalla, (166, 173, 169), (x, AREA_PISTA.bottom - 8), 3)
 
-
 def dibujar_contenedor(contenedor, rect=None):
     """Dibuja una papelera con el color y rótulo de su categoría."""
     rect = contenedor["rect"] if rect is None else rect
@@ -398,7 +429,6 @@ def dibujar_contenedor(contenedor, rect=None):
     for indice, linea in enumerate(contenedor["lineas"]):
         texto(pantalla, linea, FUENTE_CHICA, color_texto,
               (centro_texto_x, inicio_texto_y + indice * 19), centro=True)
-
 
 def dibujar_brillo_papelera(contenedor, intensidad):
     """Superpone un halo breve cuando se acierta el contenedor."""
@@ -419,12 +449,10 @@ def dibujar_brillo_papelera(contenedor, intensidad):
     )
     pantalla.blit(halo, (rect.x - 12, rect.y - 12))
 
-
 def dibujar_icono_residuo(superficie, residuo, caja):
     """Dibuja el residuo usando su imagen con fondo transparente."""
     imagen = IMAGENES_RESIDUOS[residuo["imagen"]]
     superficie.blit(imagen, imagen.get_rect(center=caja.center))
-
 
 def dibujar_residuo(residuo, seleccionado=False):
     """Dibuja el objeto aislado y resalta su silueta mientras se arrastra."""
@@ -432,7 +460,6 @@ def dibujar_residuo(residuo, seleccionado=False):
     if seleccionado:
         pygame.draw.circle(pantalla, VERDE, caja.center, 36, 2)
     dibujar_icono_residuo(pantalla, residuo, caja)
-
 
 def dibujar_escena(nivel, tiempo_restante, reciclados, cantidad, puntaje,
                    residuos_activos, tiempo_transcurrido, velocidad):
@@ -442,7 +469,6 @@ def dibujar_escena(nivel, tiempo_restante, reciclados, cantidad, puntaje,
     dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje)
     dibujar_cinta(tiempo_transcurrido, velocidad)
 
-    texto(pantalla, "DESTINO DEL RESIDUO", FUENTE_MEDIA, TINTA_SUAVE, (45, 517))
     for contenedor in CONTENEDORES:
         dibujar_contenedor(contenedor)
         if papelera_brillo_tipo == contenedor["tipo"]:
@@ -459,37 +485,40 @@ def dibujar_escena(nivel, tiempo_restante, reciclados, cantidad, puntaje,
         texto(pantalla, residuo_arrastrado["nombre"], FUENTE_MEDIA, TINTA,
               (ANCHO // 2, 489), centro=True)
 
-
 def dibujar_boton(rect, etiqueta):
     """Dibuja un botón de acción con su rótulo."""
     pygame.draw.rect(pantalla, VERDE, rect, border_radius=12)
     texto(pantalla, etiqueta, FUENTE_MEDIA, BLANCO, rect.center, centro=True)
 
-
 def dibujar_inicio():
-    """Dibuja la portada con el resumen de los nueve niveles."""
+    """Dibuja la portada con las reglas y las categorías de reciclaje."""
     pantalla.fill(FONDO)
     dibujar_encabezado(silenciado)
     pygame.draw.rect(pantalla, (205, 211, 208), (40, 110, 1020, 450), border_radius=20)
     pygame.draw.rect(pantalla, PANEL, (46, 116, 1008, 438), border_radius=16)
-    texto(pantalla, "Misión reciclaje", FUENTE_TITULO, TINTA, (ANCHO // 2, 177), centro=True)
-    texto(pantalla, "Arrastra cada residuo al contenedor que le corresponde.",
-          FUENTE, TINTA_SUAVE, (ANCHO // 2, 231), centro=True)
+    texto(pantalla, "Arrastra cada residuo a la papelera correspondiente.",
+          FUENTE_GRANDE, TINTA, (ANCHO // 2, 153), centro=True)
+    texto(pantalla, f"Completa los {len(NIVELES)} niveles de {DURACION_NIVEL} segundos cada uno.",
+          FUENTE_MEDIA, TINTA_SUAVE, (ANCHO // 2, 191), centro=True)
 
-    texto(pantalla, f"{len(NIVELES)} NIVELES · 45 SEGUNDOS CADA UNO",
-        FUENTE_GRANDE, TINTA, (ANCHO // 2, 281), centro=True)
     for indice, contenedor in enumerate(CONTENEDORES):
-        rect = pygame.Rect(44 + indice * 253, 310, 245, 145)
+        rect = pygame.Rect(44 + indice * 253, 237, 245, 145)
         dibujar_contenedor(contenedor, rect)
 
-    texto(pantalla, "ORT: más de 8 t de papel/cartón recicladas en 2024; casi 3 t de RAEE al año (2022-24).",
-        FUENTE_CHICA, TINTA, (ANCHO // 2, 487), centro=True)
-    texto(pantalla, "Fuente: Universidad ORT Uruguay, Cómo funciona ORT Recicla y qué impacto genera.",
-        FUENTE_CHICA, TINTA_SUAVE, (ANCHO // 2, 509), centro=True)
+        residuos_categoria = [
+            residuo for residuo in RESIDUOS
+            if residuo["tipo"] == contenedor["tipo"]
+        ]
+        for indice_residuo, residuo in enumerate(residuos_categoria):
+            centro_x = rect.x + round((indice_residuo + 0.5) * rect.w / 4)
+            icono = IMAGENES_RESIDUOS_PORTADA[residuo["imagen"]]
+            pantalla.blit(icono, icono.get_rect(center=(centro_x, 432)))
+
+    texto(pantalla, "Reciclá en el videojuego y también en la Universidad.",
+          FUENTE_GRANDE, VERDE, (ANCHO // 2, 508), centro=True)
     dibujar_boton(RECT_ACCION, "COMENZAR (espacio)")
     texto(pantalla, "Un error o un residuo perdido termina el intento.", FUENTE_CHICA,
           TINTA_SUAVE, (ANCHO // 2, 711), centro=True)
-
 
 def dibujar_popup(titulo, detalle, indicacion, color=VERDE):
     """Dibuja el popup sobre la escena que ya está en pantalla."""
@@ -503,12 +532,16 @@ def dibujar_popup(titulo, detalle, indicacion, color=VERDE):
     texto(pantalla, detalle, FUENTE, TINTA_SUAVE, (ANCHO // 2, 356), centro=True)
     dibujar_boton(RECT_ACCION, indicacion)
 
-
 def dibujar_mensaje(titulo, detalle, indicacion, color=VERDE):
     """Dibuja un panel de transición, derrota o victoria sobre la partida."""
-    dibujar_escena(1, DURACION_NIVEL, 0, 0, 0, [], 0, NIVELES[1]["velocidad"])
+    configuracion = NIVELES[nivel]
+    transcurrido = max(0, (inicio_mensaje - inicio_nivel) / 1000)
+    restante = max(0, DURACION_NIVEL - transcurrido)
+    dibujar_escena(
+        nivel, restante, reciclados, configuracion["cantidad"], puntaje,
+        residuos_activos, transcurrido, configuracion["velocidad"],
+    )
     dibujar_popup(titulo, detalle, indicacion, color)
-
 
 def cargar_ranking():
     """Carga los cinco mejores puntajes guardados en el directorio del juego."""
@@ -529,7 +562,6 @@ def cargar_ranking():
     ]
     return sorted(entradas, key=lambda entrada: entrada["puntaje"], reverse=True)[:LIMITE_RANKING]
 
-
 def guardar_ranking():
     """Persiste el ranking actual sin interrumpir el juego si el archivo no puede escribirse."""
     try:
@@ -538,22 +570,20 @@ def guardar_ranking():
     except OSError:
         pass
 
-
 def clasifica_para_ranking():
     """Indica si el puntaje actual entra entre los cinco primeros."""
     return len(ranking) < LIMITE_RANKING or puntaje > ranking[-1]["puntaje"]
 
-
 def comenzar_fin_partida():
     """Solicita nombre solo si el puntaje entra al ranking; luego muestra resultados."""
-    global estado, nombre_ingresado
+    global estado, nombre_ingresado, inicio_mensaje
+    inicio_mensaje = pygame.time.get_ticks()
     if clasifica_para_ranking():
         nombre_ingresado = ""
         estado = "ingresar_nombre"
         pygame.key.start_text_input()
     else:
         estado = "resultado"
-
 
 def confirmar_nombre():
     """Agrega al ranking el nombre y los datos de la partida terminada."""
@@ -566,7 +596,6 @@ def confirmar_nombre():
     guardar_ranking()
     pygame.key.stop_text_input()
     estado = "resultado"
-
 
 def alternar_pausa(ahora=None):
     """Pausa o reanuda y desplaza los relojes para congelar el nivel."""
@@ -586,12 +615,10 @@ def alternar_pausa(ahora=None):
         ultimo_aparicion += duracion_pausa
         estado = "jugando"
 
-
 def preparar_nivel(nivel_actual):
     """Crea el conjunto de residuos y reinicia los contadores del nivel."""
     cantidad = NIVELES[nivel_actual]["cantidad"]
     return preparar_residuos(cantidad), 0, pygame.time.get_ticks(), 0
-
 
 def iniciar_juego():
     """Inicializa el nivel uno y el puntaje de una partida nueva."""
@@ -599,6 +626,7 @@ def iniciar_juego():
     global residuos_pendientes, reciclados, inicio_nivel, ultimo_aparicion
     global indice_residuo, residuo_arrastrado, motivo_fallo
     global papelera_brillo_tipo
+    global inicio_mensaje
 
     estado = "jugando"
     nivel = 1
@@ -610,7 +638,7 @@ def iniciar_juego():
     residuo_arrastrado = None
     motivo_fallo = ""
     papelera_brillo_tipo = None
-
+    inicio_mensaje = inicio_nivel
 
 def siguiente_nivel():
     """Avanza un nivel o termina la partida al completar el último."""
@@ -630,7 +658,6 @@ def siguiente_nivel():
     residuo_arrastrado = None
     estado = "jugando"
 
-
 def reintentar_nivel():
     """Reinicia el nivel actual y consume una oportunidad adicional."""
     global estado, puntaje, residuos_pendientes, indice_residuo, inicio_nivel, reciclados
@@ -645,14 +672,13 @@ def reintentar_nivel():
         motivo_fallo = ""
         estado = "jugando"
 
-
 def terminar_intento(motivo):
     """Pasa a derrota y conserva el motivo que causó el fallo."""
-    global estado, motivo_fallo, residuo_arrastrado
+    global estado, motivo_fallo, residuo_arrastrado, inicio_mensaje
     estado = "fallo"
     motivo_fallo = motivo
     residuo_arrastrado = None
-
+    inicio_mensaje = pygame.time.get_ticks()
 
 def alternar_silencio():
     """Alterna el audio y actualiza el volumen de cada efecto."""
@@ -662,7 +688,6 @@ def alternar_silencio():
     for sonido in (SONIDO_ACIERTO, SONIDO_ERROR, SONIDO_NIVEL):
         if sonido is not None:
             sonido.set_volume(volumen)
-
 
 def procesar_clic(posicion):
     """Activa botones de portada, transición, derrota o victoria."""
@@ -690,7 +715,6 @@ def procesar_clic(posicion):
     elif estado == "resultado" and RECT_ACCION.collidepoint(posicion):
         estado = "inicio"
 
-
 def soltar_residuo(posicion):
     """Clasifica el objeto soltado y suma puntos o termina el intento."""
     global residuo_arrastrado, reciclados, puntaje
@@ -714,7 +738,11 @@ def soltar_residuo(posicion):
 
     if residuo_arrastrado["tipo"] != destino["tipo"]:
         reproducir(SONIDO_ERROR, silenciado)
-        terminar_intento(f"{residuo_arrastrado['nombre']} no va en {destino['lineas'][0].lower()}.")
+        nombre_destino = " ".join(
+            linea.lower() for linea in destino["lineas"]
+            if not linea.startswith("(")
+        )
+        terminar_intento(f"{residuo_arrastrado['nombre']} no va en {nombre_destino}.")
         return
 
     residuos_activos.remove(residuo_arrastrado)
@@ -724,7 +752,6 @@ def soltar_residuo(posicion):
     papelera_brillo_tipo = destino["tipo"]
     inicio_brillo_papelera = pygame.time.get_ticks()
     reproducir(SONIDO_ACIERTO, silenciado)
-
 
 def dibujar_entrada_nombre():
     """Muestra el campo de nombre previo a la pantalla final."""
@@ -736,7 +763,6 @@ def dibujar_entrada_nombre():
     contenido = nombre_ingresado or "Tu nombre..."
     color = TINTA if nombre_ingresado else TINTA_SUAVE
     texto(pantalla, contenido, FUENTE_GRANDE, color, campo.center, centro=True)
-
 
 def dibujar_resultado():
     """Dibuja el nivel y puntaje final junto al ranking persistente."""
@@ -768,6 +794,33 @@ def dibujar_resultado():
 
     dibujar_boton(RECT_ACCION, "VOLVER AL INICIO (espacio)")
 
+def dibujar_ranking():
+    """Muestra el top 5 mientras conserva suspendido el estado de juego."""
+    pantalla.fill(FONDO)
+    dibujar_encabezado(silenciado)
+    panel = pygame.Rect(180, 105, 740, 520)
+    pygame.draw.rect(pantalla, PANEL, panel, border_radius=18)
+    pygame.draw.rect(pantalla, VERDE, (panel.x, panel.y, panel.w, 9), border_radius=5)
+    texto(pantalla, "RANKING", FUENTE_TITULO, TINTA,
+          (ANCHO // 2, 155), centro=True)
+    texto(pantalla, "TOP 5", FUENTE_MEDIA, TINTA, (ANCHO // 2, 222), centro=True)
+
+    if ranking:
+        for indice, entrada in enumerate(ranking):
+            y = 268 + indice * 47
+            pygame.draw.line(pantalla, (220, 225, 222), (250, y + 20), (850, y + 20), 1)
+            texto(pantalla, f"{indice + 1}.", FUENTE_MEDIA, TINTA_SUAVE, (270, y))
+            texto(pantalla, entrada["nombre"][:LIMITE_NOMBRE], FUENTE_MEDIA,
+                  TINTA, (325, y))
+            texto(pantalla, f"Nivel {entrada['nivel']}", FUENTE_CHICA,
+                  TINTA_SUAVE, (650, y + 2))
+            texto(pantalla, f"{entrada['puntaje']} pts", FUENTE_MEDIA,
+                  VERDE, (740, y))
+    else:
+        texto(pantalla, "Todavía no hay puntajes registrados.", FUENTE,
+              TINTA_SUAVE, (ANCHO // 2, 350), centro=True)
+
+    dibujar_boton(RECT_ACCION, "VOLVER AL JUEGO (esc)")
 
 def dibujar_estado():
     """Dibuja la pantalla correspondiente al estado actual del juego."""
@@ -781,7 +834,7 @@ def dibujar_estado():
                        residuos_activos, transcurrido, configuracion["velocidad"])
     elif estado == "nivel_completado":
         titulo = f"¡Nivel {nivel} superado!"
-        detalle = "Separaste todos los residuos correctamente."
+        detalle = "Clasificaste todos los residuos correctamente."
         indicacion = ("SIGUIENTE NIVEL (espacio)" if nivel < max(NIVELES)
                   else "VER RESULTADO (espacio)")
         dibujar_mensaje(titulo, detalle, indicacion)
@@ -797,7 +850,7 @@ def dibujar_estado():
         dibujar_entrada_nombre()
     elif estado == "fallo":
         if extras_restantes > 0:
-            titulo = "Intento terminado"
+            titulo = "Ups, fallaste"
             detalle = f"{motivo_fallo}  ·  Quedan {extras_restantes} intentos extra."
             indicacion = "REINTENTAR NIVEL (R)"
         else:
@@ -807,7 +860,8 @@ def dibujar_estado():
         dibujar_mensaje(titulo, detalle, indicacion, ROJO)
     elif estado == "resultado":
         dibujar_resultado()
-
+    elif estado == "ranking":
+        dibujar_ranking()
 
 estado = "inicio"
 nivel = 1
@@ -826,14 +880,43 @@ inicio_brillo_papelera = 0
 silenciado = False
 residuos_activos = []
 pausa_inicio = 0
+estado_anterior_ranking = "jugando"
+inicio_ranking = 0
+inicio_mensaje = 0
 nombre_ingresado = ""
 ranking = cargar_ranking()
 
+def alternar_ranking(ahora=None):
+    """Abre el ranking durante una partida o la reanuda al volver."""
+    global estado, estado_anterior_ranking, inicio_ranking
+    global inicio_nivel, ultimo_aparicion, residuo_arrastrado
+
+    if ahora is None:
+        ahora = pygame.time.get_ticks()
+
+    if estado == "ranking":
+        if estado_anterior_ranking == "jugando":
+            duracion_ranking = ahora - inicio_ranking
+            inicio_nivel += duracion_ranking
+            ultimo_aparicion += duracion_ranking
+        estado = estado_anterior_ranking
+        return
+
+    if estado not in ("jugando", "pausa"):
+        return
+
+    estado_anterior_ranking = estado
+    inicio_ranking = ahora
+    if estado == "jugando" and residuo_arrastrado is not None:
+        residuo_arrastrado["seleccionado"] = False
+        residuo_arrastrado = None
+    estado = "ranking"
 
 def ejecutar_juego():
     """Ejecuta el bucle de eventos, actualización y dibujo de Pygame."""
     global estado, indice_residuo, ultimo_aparicion, residuo_arrastrado
     global motivo_fallo, puntaje, reciclados, residuos_activos, nombre_ingresado
+    global inicio_mensaje
 
     ejecutando = True
     while ejecutando:
@@ -846,11 +929,16 @@ def ejecutar_juego():
 
             elif evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_ESCAPE:
-                    ejecutando = False
+                    if estado == "ranking":
+                        alternar_ranking(ahora)
+                    else:
+                        ejecutando = False
                 elif evento.key == pygame.K_p and estado in ("jugando", "pausa"):
                     alternar_pausa(ahora)
                 elif estado == "pausa" and evento.key in (pygame.K_SPACE, pygame.K_RETURN):
                     alternar_pausa(ahora)
+                elif estado == "ranking" and evento.key in (pygame.K_SPACE, pygame.K_RETURN):
+                    alternar_ranking(ahora)
                 elif estado == "ingresar_nombre":
                     if evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                         confirmar_nombre()
@@ -878,8 +966,14 @@ def ejecutar_juego():
             elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 if RECT_SILENCIO.collidepoint(evento.pos):
                     alternar_silencio()
+                elif RECT_RANKING.collidepoint(evento.pos) and estado in (
+                    "jugando", "pausa", "ranking"
+                ):
+                    alternar_ranking(ahora)
                 elif estado in ("jugando", "pausa") and RECT_PAUSA.collidepoint(evento.pos):
                     alternar_pausa(ahora)
+                elif estado == "ranking" and RECT_ACCION.collidepoint(evento.pos):
+                    alternar_ranking(ahora)
                 elif estado in ("inicio", "pausa", "nivel_completado", "fallo",
                                 "ingresar_nombre", "resultado"):
                     anterior = estado
@@ -937,13 +1031,13 @@ def ejecutar_juego():
                         and reciclados == configuracion["cantidad"]
                         and brillo_terminado):
                     estado = "nivel_completado"
+                    inicio_mensaje = ahora
                     reproducir(SONIDO_NIVEL, silenciado)
 
         dibujar_estado()
         pygame.display.flip()
 
     pygame.quit()
-
 
 if __name__ == "__main__":
     ejecutar_juego()
