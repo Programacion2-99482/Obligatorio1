@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1400" viewBox="0 0 1800 1400" role="img" aria-labelledby="title description">
+  <title id="title">Misión Reciclaje: diagrama de flujo del jugador</title>
+  <desc id="description">Flujo de juego, victorias, derrotas, tabla de posiciones y nueva partida desde el nivel uno.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#526a80"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#348961"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#d65757"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #19334e; }
+      .title { font-size: 38px; font-weight: 700; }
+      .subtitle { font-size: 19px; fill: #5c7288; }
+      .node { fill: #fff; stroke: #6e8499; stroke-width: 3; }
+      .play { fill: #e5f1fc; stroke: #3885c5; stroke-width: 3; }
+      .decision { fill: #fff1c8; stroke: #d99719; stroke-width: 3; }
+      .success { fill: #e0f3e9; stroke: #348961; stroke-width: 3; }
+      .failure { fill: #fde5e4; stroke: #d65757; stroke-width: 3; }
+      .rank { fill: #f0e9fa; stroke: #8261a5; stroke-width: 3; }
+      .edge { fill: none; stroke: #526a80; stroke-width: 3; marker-end: url(#arrow); }
+      .edge-green { fill: none; stroke: #348961; stroke-width: 3; marker-end: url(#arrow-green); }
+      .edge-red { fill: none; stroke: #d65757; stroke-width: 3; marker-end: url(#arrow-red); }
+      .label { font-size: 16px; font-weight: 700; paint-order: stroke; stroke: #f4f7fb; stroke-width: 8px; stroke-linejoin: round; }
+      .body { font-size: 21px; font-weight: 600; text-anchor: middle; }
+      .small { font-size: 17px; font-weight: 500; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1400" fill="#f4f7fb"/>
+  <text class="title" x="900" y="55" text-anchor="middle">MISIÓN RECICLAJE · DIAGRAMA DE FLUJO DEL JUGADOR</text>
+  <text class="subtitle" x="900" y="88" text-anchor="middle">Partida, tabla de posiciones y nuevo comienzo</text>
+
+  <g aria-label="Conexiones">
+    <path class="edge" d="M245 195 H320"/>
+    <path class="edge" d="M620 195 H720"/>
+    <path class="edge" d="M900 265 V325"/>
+    <path class="edge" d="M1080 180 H1280"/>
+    <path class="edge" d="M1480 260 V290 H1100 V130 H900 V145"/>
+    <path class="edge" d="M1590 325 V310 H1120 V215 H1080"/>
+    <path class="edge-green" d="M1025 405 H1125"/>
+    <path class="edge" d="M1375 405 H1450"/>
+    <path class="edge-green" d="M1250 475 V545"/>
+    <path class="edge-red" d="M900 475 V535"/>
+    <path class="edge-red" d="M900 635 V685"/>
+    <path class="edge-green" d="M770 755 H700"/>
+    <path class="edge" d="M700 850 V300 H700 V215 H720"/>
+    <path class="edge-red" d="M1030 755 H1150"/>
+    <path class="edge-green" d="M1370 590 H1440 V895 H1450"/>
+    <path class="edge-red" d="M1430 755 H1500 V850"/>
+    <path class="edge" d="M1530 985 V1060 H1420"/>
+    <path class="edge-green" d="M1300 1130 V1170 H1500 V1190"/>
+    <path class="edge" d="M1180 1060 H1100 V1150"/>
+    <path class="edge" d="M1350 1230 H1190"/>
+    <path class="edge-green" d="M800 1230 H700"/>
+    <path class="edge-green" d="M350 1220 H280 V230 H320"/>
+  </g>
+
+  <g aria-label="Etapas del juego">
+    <rect class="success" x="55" y="150" width="190" height="90" rx="44"/>
+    <text class="body" x="150" y="205">INICIO</text>
+
+    <rect class="node" x="320" y="130" width="300" height="135" rx="18"/>
+    <text class="body" x="470" y="166">
+      <tspan x="470">Portada · Comenzar</tspan>
+      <tspan class="small" x="470" dy="29">Nueva partida: nivel 1</tspan>
+      <tspan class="small" x="470" dy="25">Puntaje 0 · 3 vidas</tspan>
+    </text>
+
+    <rect class="play" x="720" y="145" width="360" height="120" rx="18"/>
+    <text class="body" x="900" y="190">
+      <tspan x="900">Jugar nivel</tspan>
+      <tspan class="small" x="900" dy="30">Clasificar residuos a tiempo</tspan>
+    </text>
+
+    <rect class="rank" x="1280" y="145" width="400" height="115" rx="18"/>
+    <text class="body" x="1480" y="185">
+      <tspan x="1480">Consultar tabla de posiciones</tspan>
+      <tspan class="small" x="1480" dy="30">Botón de la copa · volver al juego</tspan>
+    </text>
+
+    <polygon class="decision" points="900,325 1030,405 900,485 770,405"/>
+    <text class="body" x="900" y="398">
+      <tspan x="900">¿Cómo terminó</tspan>
+      <tspan x="900" dy="27">el nivel?</tspan>
+    </text>
+
+    <polygon class="decision" points="1250,335 1375,405 1250,475 1125,405"/>
+    <text class="body" x="1250" y="398">
+      <tspan x="1250">¿Completó</tspan>
+      <tspan x="1250" dy="27">el nivel 9?</tspan>
+    </text>
+
+    <rect class="play" x="1450" y="325" width="280" height="90" rx="18"/>
+    <text class="body" x="1590" y="360">
+      <tspan x="1590">Avanzar de nivel</tspan>
+      <tspan class="small" x="1590" dy="27">Conservar vidas</tspan>
+    </text>
+
+    <rect class="success" x="1130" y="545" width="240" height="90" rx="18"/>
+    <text class="body" x="1250" y="580">
+      <tspan x="1250">¡Victoria!</tspan>
+      <tspan class="small" x="1250" dy="27">Nivel 9 completado</tspan>
+    </text>
+
+    <rect class="failure" x="730" y="535" width="340" height="110" rx="18"/>
+    <text class="body" x="900" y="570">
+      <tspan x="900">Intento fallido</tspan>
+      <tspan class="small" x="900" dy="27">Error o residuo perdido</tspan>
+      <tspan class="small" x="900" dy="24">Tiempo agotado · perder 1 vida</tspan>
+    </text>
+
+    <polygon class="decision" points="900,685 1030,755 900,825 770,755"/>
+    <text class="body" x="900" y="748">
+      <tspan x="900">¿Quedan</tspan>
+      <tspan x="900" dy="27">vidas?</tspan>
+    </text>
+
+    <rect class="play" x="420" y="800" width="280" height="100" rx="18"/>
+    <text class="body" x="560" y="840">
+      <tspan x="560">Reintentar nivel</tspan>
+      <tspan class="small" x="560" dy="28">Pulsar R · conserva vidas</tspan>
+    </text>
+
+    <rect class="failure" x="1150" y="710" width="280" height="90" rx="18"/>
+    <text class="body" x="1290" y="765">Derrota · fin de partida</text>
+
+    <rect class="node" x="1450" y="850" width="320" height="135" rx="18"/>
+    <text class="body" x="1610" y="895">
+      <tspan x="1610">Fin de partida</tspan>
+      <tspan class="small" x="1610" dy="30">Victoria o derrota</tspan>
+    </text>
+
+    <polygon class="decision" points="1300,990 1420,1060 1300,1130 1180,1060"/>
+    <text class="body" x="1300" y="1053">
+      <tspan x="1300">¿Puntaje entre</tspan>
+      <tspan x="1300" dy="27">los 5 mejores?</tspan>
+    </text>
+
+    <rect class="node" x="1350" y="1190" width="300" height="90" rx="18"/>
+    <text class="body" x="1500" y="1227">
+      <tspan x="1500">Ingresar nombre</tspan>
+      <tspan class="small" x="1500" dy="27">y guardar puntaje</tspan>
+    </text>
+
+    <rect class="rank" x="800" y="1150" width="390" height="130" rx="18"/>
+    <text class="body" x="995" y="1188">
+      <tspan x="995">Resultados · tabla TOP 5</tspan>
+      <tspan class="small" x="995" dy="29">Puntajes y posiciones guardadas</tspan>
+      <tspan class="small" x="995" dy="25">Se muestra el ranking final</tspan>
+    </text>
+
+    <rect class="success" x="350" y="1170" width="350" height="100" rx="18"/>
+    <text class="body" x="525" y="1208">
+      <tspan x="525">Volver a la portada</tspan>
+      <tspan class="small" x="525" dy="28">Espacio · luego Comenzar</tspan>
+    </text>
+  </g>
+
+  <g aria-label="Rótulos de las conexiones">
+    <text class="label" x="1060" y="376">Nivel completo</text>
+    <text class="label" x="1400" y="376">No</text>
+    <text class="label" x="1265" y="515">Sí</text>
+    <text class="label" x="920" y="513">Fallo</text>
+    <text class="label" x="730" y="740">Sí</text>
+    <text class="label" x="1080" y="740">No</text>
+    <text class="label" x="1660" y="550">Victoria</text>
+    <text class="label" x="1450" y="720">Derrota</text>
+    <text class="label" x="1315" y="1162">Sí</text>
+    <text class="label" x="1135" y="1045">No</text>
+    <text class="label" x="330" y="1090" transform="rotate(-90 330 1090)">Nueva partida desde nivel 1</text>
+  </g>
+
+  <text class="subtitle" x="900" y="1350" text-anchor="middle">Una partida nueva comienza en el nivel 1 con el puntaje y las 3 vidas reiniciados.</text>
+</svg>

@@ -39,6 +39,7 @@ El juego muestra los residuos usando sus imágenes transparentes de `imagenes/` 
 - `ajustes.py`: colores, dimensiones, duración y velocidades de los niveles.
 - `imagenes/*.png`: imágenes transparentes de los 16 residuos.
 - `imagenes/Papeleras.jpeg`: imagen de referencia de las cuatro papeleras.
+- `ORTRecicla/imagenes/diagrama_flujo_jugador.svg`: diagrama de flujo con el ranking, la consulta durante la partida y el regreso a la portada para comenzar una nueva partida desde el nivel 1.
 
 
 ## Fuentes y uso de IA
