@@ -106,6 +106,7 @@ def quitar_fondo_blanco(imagen):
     )
 
     for punto in bordes:
+        # Solo se quita el blanco conectado al borde para conservar detalles claros internos.
         if mascara_blancos.get_at(punto) and not fondo.get_at(punto):
             fondo.draw(mascara_blancos.connected_component(punto), (0, 0))
 
@@ -210,6 +211,7 @@ class Residuo(dict):
     def __init__(self, datos, x, y):
         """Construye el residuo a partir de sus datos y su posición inicial."""
         super().__init__(datos)
+        # La posición fraccionaria evita que el redondeo por fotograma altere la velocidad.
         self.posicion_x = float(x)
         self["rect"] = pygame.Rect(x, y, ANCHO_RESIDUO, ALTO_RESIDUO)
         self["seleccionado"] = False
@@ -255,6 +257,7 @@ def reproducir(sonido, silenciado):
 
 def preparar_residuos(cantidad):
     """Crea una lista aleatoria que siempre contiene las cuatro categorías."""
+    # Garantiza que cada nivel incluya al menos un residuo de cada categoría.
     seleccionados = [
         random.choice([residuo for residuo in RESIDUOS if residuo["tipo"] == tipo])
         for tipo in ("mezclado", "plastico", "electronico", "papel")
@@ -624,6 +627,7 @@ def alternar_pausa(ahora=None):
         estado = "pausa"
     elif estado == "pausa":
         duracion_pausa = ahora - pausa_inicio
+        # Desplaza los relojes para que el tiempo y la aparición de residuos queden congelados.
         inicio_nivel += duracion_pausa
         ultimo_aparicion += duracion_pausa
         estado = "jugando"
@@ -676,6 +680,7 @@ def reintentar_nivel():
     global ultimo_aparicion, residuo_arrastrado, motivo_fallo
 
     if vidas_restantes > 0:
+        # El puntaje de niveles ya superados se conserva al reintentar el nivel actual.
         puntaje = puntaje_base_nivel
         residuos_pendientes, indice_residuo, inicio_nivel, reciclados = preparar_nivel(nivel)
         ultimo_aparicion = inicio_nivel
@@ -910,6 +915,7 @@ def alternar_ranking(ahora=None):
     if estado == "ranking":
         if estado_anterior_ranking == "jugando":
             duracion_ranking = ahora - inicio_ranking
+            # Consultar el ranking no consume tiempo ni cambia el ritmo de aparición.
             inicio_nivel += duracion_ranking
             ultimo_aparicion += duracion_ranking
         estado = estado_anterior_ranking
@@ -1040,6 +1046,7 @@ def ejecutar_juego():
                 brillo_terminado = (
                     ahora - inicio_brillo_papelera >= DURACION_BRILLO_PAPELERA
                 )
+                # Se muestra el feedback visual completo antes de pasar a la pantalla siguiente.
                 if (estado == "jugando"
                         and reciclados == configuracion["cantidad"]
                         and brillo_terminado):
