@@ -18,7 +18,7 @@ Juego arcade en Python y Pygame. Arrastra cada residuo desde la cinta a su papel
 	- Nivel 7: 35 elementos a 148 px/s.
 	- Nivel 8: 40 elementos a 148 px/s.
 	- Nivel 9: 40 elementos a 168 px/s.
-- Un residuo mal clasificado, caido o el tiempo agotado termina la partida. Hay dos reintentos adicionales en el nivel actual.
+- Un residuo mal clasificado, caído o el tiempo agotado consume una vida. Hay tres vidas para toda la partida, compartidas entre los nueve niveles.
 - Pulsa **Espacio** para continuar y **R** para reintentar. **Esc** cierra el juego.
 
 ## Instalación y ejecución
@@ -55,4 +55,3 @@ Se utilizó **GitHub Copilot** como apoyo para implementar y revisar el código.
 ## Repositorio
 
 Remoto configurado: [Programacion2-99482/Obligatorio1](https://github.com/Programacion2-99482/Obligatorio1). El historial se mantiene con commits reales y descriptivos.
-

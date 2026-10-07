@@ -202,6 +202,7 @@ RECT_ACCION = pygame.Rect(*RECT_ACCION_CONFIG)
 ARCHIVO_RANKING = Path(__file__).with_name("ranking.json")
 LIMITE_RANKING = 5
 LIMITE_NOMBRE = 10
+VIDAS_INICIALES = 3
 
 class Residuo(dict):
     """Residuo seleccionable que avanza con la banda de la cinta."""
@@ -404,6 +405,7 @@ def dibujar_paneles(nivel, tiempo_restante, reciclados, cantidad, puntaje):
     texto(pantalla, f"NIVEL {nivel}", FUENTE_MEDIA, TINTA, (46, 199))
     texto(pantalla, "Clasifica cada residuo antes de que salga de la cinta",
           FUENTE_MEDIA, TINTA_SUAVE, (157, 201))
+    texto(pantalla, f"VIDAS {vidas_restantes}", FUENTE_CHICA, ROJO, (696, 199))
 
     barra = pygame.Rect(800, 204, 250, 9)
     pygame.draw.rect(pantalla, (196, 203, 200), barra, border_radius=5)
@@ -633,7 +635,7 @@ def preparar_nivel(nivel_actual):
 
 def iniciar_juego():
     """Inicializa el nivel uno y el puntaje de una partida nueva."""
-    global estado, nivel, puntaje, puntaje_base_nivel, extras_restantes
+    global estado, nivel, puntaje, puntaje_base_nivel, vidas_restantes
     global residuos_pendientes, reciclados, inicio_nivel, ultimo_aparicion
     global indice_residuo, residuo_arrastrado, motivo_fallo
     global papelera_brillo_tipo
@@ -643,7 +645,7 @@ def iniciar_juego():
     nivel = 1
     puntaje = 0
     puntaje_base_nivel = 0
-    extras_restantes = 2
+    vidas_restantes = VIDAS_INICIALES
     residuos_pendientes, indice_residuo, inicio_nivel, reciclados = preparar_nivel(nivel)
     ultimo_aparicion = inicio_nivel
     residuo_arrastrado = None
@@ -653,7 +655,7 @@ def iniciar_juego():
 
 def siguiente_nivel():
     """Avanza un nivel o termina la partida al completar el último."""
-    global estado, nivel, puntaje_base_nivel, extras_restantes
+    global estado, nivel, puntaje_base_nivel
     global residuos_pendientes, indice_residuo, inicio_nivel, reciclados, ultimo_aparicion
     global residuo_arrastrado
 
@@ -663,19 +665,17 @@ def siguiente_nivel():
 
     nivel += 1
     puntaje_base_nivel = puntaje
-    extras_restantes = 2
     residuos_pendientes, indice_residuo, inicio_nivel, reciclados = preparar_nivel(nivel)
     ultimo_aparicion = inicio_nivel
     residuo_arrastrado = None
     estado = "jugando"
 
 def reintentar_nivel():
-    """Reinicia el nivel actual y consume una oportunidad adicional."""
+    """Reinicia el nivel actual si quedan vidas disponibles."""
     global estado, puntaje, residuos_pendientes, indice_residuo, inicio_nivel, reciclados
-    global ultimo_aparicion, extras_restantes, residuo_arrastrado, motivo_fallo
+    global ultimo_aparicion, residuo_arrastrado, motivo_fallo
 
-    if extras_restantes > 0:
-        extras_restantes -= 1
+    if vidas_restantes > 0:
         puntaje = puntaje_base_nivel
         residuos_pendientes, indice_residuo, inicio_nivel, reciclados = preparar_nivel(nivel)
         ultimo_aparicion = inicio_nivel
@@ -685,7 +685,9 @@ def reintentar_nivel():
 
 def terminar_intento(motivo):
     """Pasa a derrota y conserva el motivo que causó el fallo."""
-    global estado, motivo_fallo, residuo_arrastrado, inicio_mensaje
+    global estado, motivo_fallo, residuo_arrastrado, inicio_mensaje, vidas_restantes
+    if estado == "jugando":
+        vidas_restantes -= 1
     estado = "fallo"
     motivo_fallo = motivo
     residuo_arrastrado = None
@@ -717,7 +719,7 @@ def procesar_clic(posicion):
     elif estado == "nivel_completado" and RECT_ACCION.collidepoint(posicion):
         siguiente_nivel()
     elif estado == "fallo" and RECT_ACCION.collidepoint(posicion):
-        if extras_restantes > 0:
+        if vidas_restantes > 0:
             reintentar_nivel()
         else:
             comenzar_fin_partida()
@@ -860,13 +862,13 @@ def dibujar_estado():
     elif estado == "ingresar_nombre":
         dibujar_entrada_nombre()
     elif estado == "fallo":
-        if extras_restantes > 0:
+        if vidas_restantes > 0:
             titulo = "Ups, fallaste"
-            detalle = f"{motivo_fallo}  ·  Quedan {extras_restantes} intentos extra."
+            detalle = f"{motivo_fallo}  ·  Te quedan {vidas_restantes} vidas."
             indicacion = "REINTENTAR NIVEL (R)"
         else:
             titulo = "Nivel no superado"
-            detalle = f"{motivo_fallo}  ·  Se agotaron los intentos extra."
+            detalle = f"{motivo_fallo}  ·  Se agotaron las vidas."
             indicacion = "VER RESULTADO  ·  R"
         dibujar_mensaje(titulo, detalle, indicacion, ROJO)
     elif estado == "resultado":
@@ -878,7 +880,7 @@ estado = "inicio"
 nivel = 1
 puntaje = 0
 puntaje_base_nivel = 0
-extras_restantes = 2
+vidas_restantes = VIDAS_INICIALES
 residuos_pendientes = []
 indice_residuo = 0
 inicio_nivel = 0
@@ -963,7 +965,7 @@ def ejecutar_juego():
                     residuos_activos = []
                     reproducir(SONIDO_NIVEL, silenciado)
                 elif estado == "fallo" and evento.key == pygame.K_r:
-                    if extras_restantes > 0:
+                    if vidas_restantes > 0:
                         reintentar_nivel()
                         residuos_activos = []
                     else:
