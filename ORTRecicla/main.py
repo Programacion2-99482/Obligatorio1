@@ -46,7 +46,9 @@ try:
 except pygame.error:
     pass
 
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pantalla = pygame.display.set_mode(
+    (ANCHO, ALTO), pygame.FULLSCREEN | pygame.SCALED
+)
 pygame.display.set_caption("MISIÓN Reciclaje")
 reloj = pygame.time.Clock()
 
