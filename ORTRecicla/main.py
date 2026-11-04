@@ -46,11 +46,15 @@ try:
 except pygame.error:
     pass
 
-pantalla = pygame.display.set_mode(
-    (ANCHO, ALTO), pygame.FULLSCREEN | pygame.SCALED
-)
+pantalla_ventana = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+pantalla = pygame.Surface((ANCHO, ALTO))
 pygame.display.set_caption("MISIÓN Reciclaje")
 reloj = pygame.time.Clock()
+
+def posicion_logica(posicion):
+    """Convierte una posición de pantalla al espacio de coordenadas del juego."""
+    ancho, alto = pantalla_ventana.get_size()
+    return posicion[0] * ANCHO // ancho, posicion[1] * ALTO // alto
 
 FUENTE_TITULO = pygame.font.SysFont("arial", TAM_TITULO, bold=True)
 FUENTE_GRANDE = pygame.font.SysFont("arial", TAM_GRANDE, bold=True)
@@ -985,27 +989,28 @@ def ejecutar_juego():
                 nombre_ingresado = (nombre_ingresado + evento.text)[:LIMITE_NOMBRE]
 
             elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-                if RECT_SILENCIO.collidepoint(evento.pos):
+                posicion = posicion_logica(evento.pos)
+                if RECT_SILENCIO.collidepoint(posicion):
                     alternar_silencio()
-                elif RECT_RANKING.collidepoint(evento.pos) and estado in (
+                elif RECT_RANKING.collidepoint(posicion) and estado in (
                     "jugando", "pausa", "ranking"
                 ):
                     alternar_ranking(ahora)
-                elif estado in ("jugando", "pausa") and RECT_PAUSA.collidepoint(evento.pos):
+                elif estado in ("jugando", "pausa") and RECT_PAUSA.collidepoint(posicion):
                     alternar_pausa(ahora)
-                elif estado == "ranking" and RECT_ACCION.collidepoint(evento.pos):
+                elif estado == "ranking" and RECT_ACCION.collidepoint(posicion):
                     alternar_ranking(ahora)
                 elif estado in ("inicio", "pausa", "nivel_completado", "fallo",
                                 "ingresar_nombre", "resultado"):
                     anterior = estado
-                    procesar_clic(evento.pos)
+                    procesar_clic(posicion)
                     if estado == "jugando" and anterior in ("inicio", "nivel_completado", "fallo"):
                         residuos_activos = []
                         if anterior == "nivel_completado":
                             reproducir(SONIDO_NIVEL, silenciado)
                 elif estado == "jugando":
                     for residuo in reversed(residuos_activos):
-                        if residuo["rect"].collidepoint(evento.pos):
+                        if residuo["rect"].collidepoint(posicion):
                             residuo_arrastrado = residuo
                             residuo["seleccionado"] = True
                             residuo["posicion_origen"] = residuo["rect"].copy()
@@ -1013,14 +1018,15 @@ def ejecutar_juego():
 
             elif (evento.type == pygame.MOUSEMOTION and estado == "jugando"
                   and residuo_arrastrado is not None):
-                residuo_arrastrado.arrastrar(evento.pos)
+                residuo_arrastrado.arrastrar(posicion_logica(evento.pos))
 
             elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
                 if estado == "jugando" and residuo_arrastrado is not None:
-                    if RECT_PAUSA.collidepoint(evento.pos):
+                    posicion = posicion_logica(evento.pos)
+                    if RECT_PAUSA.collidepoint(posicion):
                         alternar_pausa(ahora)
                     else:
-                        soltar_residuo(evento.pos)
+                        soltar_residuo(posicion)
 
         if estado == "jugando":
             configuracion = NIVELES[nivel]
@@ -1057,6 +1063,7 @@ def ejecutar_juego():
                     reproducir(SONIDO_NIVEL, silenciado)
 
         dibujar_estado()
+        pygame.transform.scale(pantalla, pantalla_ventana.get_size(), pantalla_ventana)
         pygame.display.flip()
 
     pygame.quit()
